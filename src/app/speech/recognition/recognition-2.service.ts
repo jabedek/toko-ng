@@ -27,7 +27,7 @@ import {
   attachListenersRecog,
   detachListenersRecog,
   getGrammar,
-  wordConcat,
+  // wordConcat,
 } from './utils/recognition.utils';
 
 declare var webkitSpeechRecognition: any;
@@ -42,8 +42,10 @@ const SpeechRecognition = webkitSpeechRecognition,
 export class RecogService2 {
   recognition: SpeechRecognition | undefined;
   isStoppedSpeechRecog = false;
+  isListening = false;
   text = '';
-  tempWords: any = undefined;
+  textDisplayed = '';
+  tempWords = '';
 
   // Defaults
   defaults$: Observable<RecognitionDefaults> = this.store.select(
@@ -119,13 +121,12 @@ export class RecogService2 {
       recognition.interimResults = selected.interimResults;
       recognition.maxAlternatives = selected.maxAlternatives;
     }
-    const terms = ['hej', 'cześć', 'test'];
-    const grammar: string = getGrammar(terms);
+    const terms = this.selected?.terms || ['hej', 'cześć', 'test'];
+    const grammar: string = this.selected?.grammar || getGrammar(terms);
 
     /* Plug the grammar into speech recognition and configure few other properties */
     let speechRecognitionList = new SpeechGrammarList();
     speechRecognitionList.addFromString(grammar, 1);
-    console.log(speechRecognitionList);
 
     recognition.grammars = speechRecognitionList;
     recognition = attachListenersRecog(
@@ -134,6 +135,7 @@ export class RecogService2 {
       detachListenersRecog,
       {
         onend: this.handleEndEvent,
+        onresult: this.handleResultEvent,
       }
     );
 
@@ -141,7 +143,6 @@ export class RecogService2 {
     this.store.dispatch(setSelectedGrammar({ grammar }));
     this.store.dispatch(loadRecognition({ recognition }));
 
-    console.log(recognition);
     return recognition;
   }
 
@@ -150,23 +151,41 @@ export class RecogService2 {
 
     if (this.isStoppedSpeechRecog) {
       this.recognition?.stop();
-      console.log('End speech recognition');
     } else {
-      wordConcat(this.text, this.tempWords);
+      this.wordConcat();
+      this.tempWords = '';
       this.recognition?.start();
     }
   };
 
+  handleResultEvent = (event: any) => {
+    console.log(`[${event.type} - specific handler]`, event);
+    const transcript = Array.from(event.results)
+      .map((result: any) => result[0])
+      .map((result) => result.transcript)
+      .join('');
+    console.log(transcript);
+    this.tempWords = transcript;
+    this.textDisplayed = transcript;
+
+    this.wordConcat();
+  };
+
   listen() {
-    this.isStoppedSpeechRecog = false;
-    this.recognition?.stop();
-    this.recognition?.start();
-    console.log('Speech recognition started');
+    if (!this.isListening) {
+      console.log('elo');
+
+      this.isListening = true;
+      this.isStoppedSpeechRecog = false;
+      this.recognition?.start();
+      console.log('Speech recognition started');
+    }
   }
 
   stop() {
+    this.isListening = false;
     this.isStoppedSpeechRecog = true;
-    wordConcat(this.text, this.tempWords);
+    this.wordConcat();
     this.recognition?.stop();
     console.log('End speech recognition');
   }
@@ -196,5 +215,10 @@ export class RecogService2 {
     this.defaults$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
       this.defaults = d;
     });
+  }
+
+  wordConcat() {
+    this.text = this.text + ' ' + this.tempWords + '.';
+    this.tempWords = '';
   }
 }

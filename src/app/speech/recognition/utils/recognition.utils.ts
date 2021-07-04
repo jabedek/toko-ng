@@ -125,6 +125,9 @@ export function detachListenersRecog(
   return newRecognition;
 }
 
-export function wordConcat(text: string, tempWords: string) {
-  return text + tempWords + '.';
-}
+// export function wordConcat(text: string, tempWords: string) {
+//   const result = text + tempWords + '.';
+
+//   console.log(result);
+//   return result;
+// }

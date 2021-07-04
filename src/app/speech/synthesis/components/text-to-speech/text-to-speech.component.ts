@@ -1,3 +1,4 @@
+import { SynthesisDefaults } from './../../models/synthesis.model';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/app-state/app-state.model';
@@ -16,10 +17,8 @@ import { SynthService } from '../../synthesis.service';
 })
 export class TextToSpeechComponent implements OnInit, OnDestroy {
   // Defaults
-  recommendedVoices$: Observable<RecommendedVoices> | undefined;
-  rates$: Observable<DefaultRate[]> | undefined;
-  voices$: Observable<SpeechSynthesisVoice[]> | undefined;
 
+  defaults$: Observable<SynthesisDefaults> | undefined;
   // Selected
   selected: SynthesisSelected = {
     rate: 1,
@@ -28,13 +27,12 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   };
 
   // other
-  text: string = 'Romeo Yeti Bravo Tango';
+  speakOnChange = true;
+  text: string = 'Romeo. Bravo. Tango. Uniform.';
   private destroy$: Subject<void> = new Subject();
 
   constructor(public synth: SynthService) {
-    this.rates$ = this.synth.rates$;
-    this.recommendedVoices$ = this.synth.recommendedVoices$;
-    this.voices$ = this.synth.voices$;
+    this.defaults$ = this.synth.defaults$;
 
     this.subscribeSynthSelected();
   }
@@ -44,6 +42,25 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  handleKey(event?: any) {
+    const key = event.keyCode || event.which;
+    const isReactiveKey = [8, 20, 32, 46, 188, 190].find((k) => k === key);
+
+    if (isReactiveKey) {
+      if (this.speakOnChange) {
+        this.speak();
+      }
+    } else {
+      if (key < 48 || key > 90) {
+        return;
+      } else {
+        if (this.speakOnChange) {
+          this.speak();
+        }
+      }
+    }
   }
 
   pause(): void {
@@ -69,7 +86,10 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   updateSelected(key: 'pitch' | 'rate' | 'voice') {
     const value = this.selected[key];
     this.synth.updateSelected(key, value);
-    this.previewVoice();
+
+    if (this.speakOnChange) {
+      this.previewVoice();
+    }
   }
 
   private subscribeSynthSelected() {

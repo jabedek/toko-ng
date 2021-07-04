@@ -36,6 +36,15 @@
       />
     </section>
   </div>
+
+  <div class="form-field">
+    <label class="form-field__label">Terms to focus on</label>
+    <input
+      [(ngModel)]="termsDisplayed"
+      (keydown)="updateSelected('terms')"
+      class="form-field__control"
+    />
+  </div>
 </ng-container>
 
 <div class="form-actions">
@@ -51,3 +60,5 @@
     Stop listening
   </button>
 </div>
+
+Words:{{ recog.textDisplayed }}

@@ -1,13 +1,47 @@
-.form-field {
+.form {
   display: flex;
   flex-direction: column;
 
-  &__label {
-    width: 100px;
-  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    margin: 0.6rem 0;
 
-  &--inline {
-    display: inline-flex;
-    margin-right: 1rem;
+    &__label {
+      min-width: 200px;
+      width: auto;
+
+      &--value {
+        font-size: 0.85rem;
+        margin-bottom: 0.2rem;
+      }
+    }
+
+    &--inline {
+      display: inline-flex;
+      margin-right: 1rem;
+    }
+
+    &__control {
+      &--textarea {
+        width: 380px;
+      }
+
+      &--checkbox {
+        margin: 0 1rem;
+        height: 18px;
+        width: 18px;
+        border-radius: 50% !important;
+      }
+    }
   }
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+  align-content: flex-start;
+  justify-content: flex-start;
 }

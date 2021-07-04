@@ -30,15 +30,17 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
     lang: undefined,
     interimResults: true,
     maxAlternatives: 5,
-    terms: [],
+    terms: ['hej', 'cześć', 'test'],
     grammar: '',
-    continuous: false,
+    continuous: true,
   };
+
+  termsDisplayed = 'hej, cześć, test';
 
   // other
   private destroy$: Subject<void> = new Subject();
 
-  constructor(private recog: RecogService2) {
+  constructor(public recog: RecogService2) {
     this.subscribeRecogSelected();
 
     this.langs$ = this.recog.langs$;
@@ -63,8 +65,16 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
     this.recog.stop();
   }
 
-  updateSelected(key: 'lang' | 'interimResults') {
-    const value = this.selected[key];
+  updateSelected(
+    key: 'lang' | 'interimResults' | 'terms' | 'grammar' | 'continuous'
+  ) {
+    let value: any;
+    console.log('textToWords');
+    if (key === 'terms') {
+      value = this.textToWords(this.termsDisplayed);
+    } else {
+      value = this.selected[key];
+    }
     this.recog.updateSelected(key, value);
   }
 
@@ -73,5 +83,19 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
       this.selected.interimResults = data.interimResults;
       this.selected.lang = data.lang;
     });
+  }
+
+  textToWords(text: string) {
+    console.log('textToWords');
+
+    const whitespacesTest = /\s*/gm;
+    const specialSymbolsTest = /[\.]*[\-]*[\+]*[\/]*/gm;
+    let words = text
+      .replace(',,', ',')
+      .replace(specialSymbolsTest, '')
+      .replace(whitespacesTest, '')
+      .split(',');
+
+    return words;
   }
 }
