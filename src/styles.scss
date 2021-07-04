@@ -17,6 +17,11 @@
     url("./assets/fonts/Roboto/Roboto-ThinItalic.ttf") format("truetype");
 }
 
+body {
+  width: 100vw;
+  height: 100vh;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -36,6 +41,12 @@ button {
   & + button {
     margin-left: 5px;
   }
+}
+
+input,
+select,
+textarea {
+  margin: 6px 0;
 }
 
 input[type="range"] {
