@@ -7,7 +7,7 @@ import {
   SynthesisSelected,
 } from '../../models/synthesis.model';
 import { DefaultRate } from '../../models/synthesis.constants';
-import { SpeechService } from './../../../speech.service';
+import { SynthService } from '../../synthesis.service';
 
 @Component({
   selector: 'app-text-to-speech',
@@ -24,23 +24,17 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   selected: SynthesisSelected = {
     rate: 1,
     pitch: 1,
-    voice: null,
+    voice: undefined,
   };
 
-  // Speaking
-  text: string = 'Romeo Yeti Bravo Tango';
-
   // other
+  text: string = 'Romeo Yeti Bravo Tango';
   private destroy$: Subject<void> = new Subject();
 
-  constructor(
-    public store: Store<AppState>,
-    public speech: SpeechService,
-    public cdr: ChangeDetectorRef
-  ) {
-    this.rates$ = this.speech.rates$;
-    this.recommendedVoices$ = this.speech.recommendedVoices$;
-    this.voices$ = this.speech.voices$;
+  constructor(public synth: SynthService) {
+    this.rates$ = this.synth.rates$;
+    this.recommendedVoices$ = this.synth.recommendedVoices$;
+    this.voices$ = this.synth.voices$;
 
     this.subscribeSynthSelected();
   }
@@ -53,33 +47,33 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   }
 
   pause(): void {
-    this.speech.pause();
+    this.synth.pause();
   }
 
   previewVoice(): void {
-    this.speech.previewVoice(this.text);
+    this.synth.previewVoice(this.text);
   }
 
   resume(): void {
-    this.speech.resume();
+    this.synth.resume();
   }
 
   speak(): void {
-    this.speech.speak(this.text);
+    this.synth.speak(this.text);
   }
 
   stop(): void {
-    this.speech.stop();
+    this.synth.stop();
   }
 
   updateSelected(key: 'pitch' | 'rate' | 'voice') {
     const value = this.selected[key];
-    this.speech.updateSelected(key, value);
+    this.synth.updateSelected(key, value);
     this.previewVoice();
   }
 
   private subscribeSynthSelected() {
-    this.speech.selected$.subscribe((data) => {
+    this.synth.selected$.subscribe((data) => {
       this.selected.voice = data.voice;
       this.selected.rate = data.rate!;
       this.selected.pitch = data.pitch;

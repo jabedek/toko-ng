@@ -1,3 +1,4 @@
+import { takeUntil } from 'rxjs/operators';
 import {
   selectSynthesisSelected,
   selectSynthesisDefaults,
@@ -5,17 +6,17 @@ import {
   selectDefaultRates,
   selectDefaultRecommendedVoices,
   selectDefaultVoices,
-} from './synthesis/state/synthesis.selectors';
-import { Observable, Subscription } from 'rxjs';
-import { Injectable } from '@angular/core';
+} from './state/synthesis.selectors';
+import { Observable, Subject } from 'rxjs';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { AppState } from '../app-state/app-state.model';
-import { recommendedVoicesEN } from './synthesis/configs/en/recommended-voices-en';
+import { AppState } from '../../app-state/app-state.model';
+import { recommendedVoicesEN } from './configs/en/recommended-voices-en';
 import {
   DefaultRate,
   DEFAULT_SYNTHESIS_RATES,
-  utteranceEvents,
-} from './synthesis/models/synthesis.constants';
+  UTTERANCE_EVENTS,
+} from './models/synthesis.constants';
 import {
   UtteranceEventsSubscriptions,
   ListenersAttacherFn,
@@ -23,7 +24,7 @@ import {
   SynthesisDefaults,
   SynthesisSelected,
   SynthesisSpeaking,
-} from './synthesis/models/synthesis.model';
+} from './models/synthesis.model';
 import {
   loadRecommendedVoices,
   loadSynthesisRates,
@@ -33,25 +34,28 @@ import {
   setSelectedVoice,
   setSpeaking,
   setSpeakingProcess,
-} from './synthesis/state/synthesis.actions';
+} from './state/synthesis.actions';
 import { fromEvent } from 'rxjs';
 import {
   handleEndEvent,
   logBoundaryEvent,
-} from './synthesis/utils/speech-synthesis-events.utils';
+} from './utils/speech-synthesis-events.utils';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SpeechService {
+export class SynthService implements OnDestroy {
   // Defaults
-  recommendedVoices$: Observable<RecommendedVoices> | undefined;
-  rates$: Observable<DefaultRate[]> | undefined;
-  voices$: Observable<SpeechSynthesisVoice[]> | undefined;
   defaults$: Observable<SynthesisDefaults> = this.store.select(
     selectSynthesisDefaults
   );
   defaults: SynthesisDefaults | undefined;
+  rates$: Observable<DefaultRate[]> = this.store.select(selectDefaultRates);
+  recommendedVoices$: Observable<RecommendedVoices> = this.store.select(
+    selectDefaultRecommendedVoices
+  );
+  voices$: Observable<SpeechSynthesisVoice[]> =
+    this.store.select(selectDefaultVoices);
 
   // Selected
   selected$: Observable<SynthesisSelected> = this.store.select(
@@ -67,16 +71,19 @@ export class SpeechService {
 
   // other
   private eventsSubs: UtteranceEventsSubscriptions[] = [];
+  private destroy$: Subject<void> = new Subject();
 
   constructor(public store: Store<AppState>) {
-    this.rates$ = this.store.select(selectDefaultRates);
-    this.recommendedVoices$ = this.store.select(selectDefaultRecommendedVoices);
-    this.voices$ = this.store.select(selectDefaultVoices);
+    this.subscribeToStore();
 
     setTimeout(() => {
       this.init();
-      this.subscribeToStore();
     }, 0);
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
@@ -166,8 +173,8 @@ export class SpeechService {
         setSpeaking({
           speaking: {
             content: {
-              utterance: null,
-              utteranceOptions: null,
+              utterance: undefined,
+              utteranceOptions: undefined,
             },
             process: {
               isRunning: false,
@@ -195,14 +202,14 @@ export class SpeechService {
   }
 
   private attachListeners: ListenersAttacherFn = (
-    utterance: SpeechSynthesisUtterance,
+    target: SpeechSynthesisUtterance,
     logAllEvents = false
   ) => {
     this.detachListeners();
-    utteranceEvents.forEach((eventType, index) => {
+    UTTERANCE_EVENTS.forEach((eventType, index) => {
       if (this.eventsSubs[index]) {
         this.eventsSubs[index].subscription = fromEvent(
-          utterance,
+          target,
           eventType
         ).subscribe((event: any) => {
           switch (event.type) {
@@ -241,14 +248,14 @@ export class SpeechService {
       loadRecommendedVoices({ recommendedVoices: recommendedVoicesEN })
     );
 
-    utteranceEvents.forEach((e, index) => {
+    UTTERANCE_EVENTS.forEach((e, index) => {
       this.eventsSubs[index] = { type: e, subscription: undefined };
     });
 
     setTimeout(() => {
       voices = speechSynthesis.getVoices();
       this.store.dispatch(loadVoices({ voices }));
-      this.store.dispatch(setSelectedVoice({ voice: voices[0] || null }));
+      this.store.dispatch(setSelectedVoice({ voice: voices[0] || undefined }));
       voice = voices.find((v) => v.name === voiceName0)!;
 
       if (!voices.length) {
@@ -257,7 +264,7 @@ export class SpeechService {
           voice = voices.find((v) => v.name === voiceName0)!;
           this.store.dispatch(loadVoices({ voices }));
           this.store.dispatch(
-            setSelectedVoice({ voice: POLISH ? voice : voices[0] || null })
+            setSelectedVoice({ voice: POLISH ? voice : voices[0] || undefined })
           );
         });
       }
@@ -265,15 +272,15 @@ export class SpeechService {
   }
 
   private subscribeToStore(): void {
-    this.defaults$.subscribe((d) => {
+    this.defaults$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
       this.defaults = d;
     });
 
-    this.selected$.subscribe((d) => {
+    this.selected$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
       this.selected = d;
     });
 
-    this.speaking$.subscribe((d) => {
+    this.speaking$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
       this.speaking = d;
     });
   }

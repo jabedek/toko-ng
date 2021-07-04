@@ -17,8 +17,8 @@ export interface SynthesisDefaults {
 
 export interface SynthesisSelected {
   pitch: number;
-  rate: number | null | undefined;
-  voice: SpeechSynthesisVoice | null | undefined;
+  rate: number | undefined;
+  voice: SpeechSynthesisVoice | undefined;
 }
 
 export interface SynthesisSpeaking {
@@ -45,8 +45,8 @@ export interface SpeakingProcess {
 }
 
 export interface SpeakingContent {
-  utterance: SpeechSynthesisUtterance | null | undefined;
-  utteranceOptions: SpeechSynthesisUtteranceOptions | null | undefined;
+  utterance: SpeechSynthesisUtterance | undefined;
+  utteranceOptions: SpeechSynthesisUtteranceOptions | undefined;
 }
 
 export interface RecommendedVoices {
@@ -61,7 +61,7 @@ export interface UtteranceEventsSubscriptions {
 }
 
 export type ListenersAttacherFn = (
-  utterance: SpeechSynthesisUtterance,
+  target: SpeechSynthesisUtterance,
   logAllEvents?: boolean
 ) => void;
 

@@ -20,7 +20,7 @@ export const initialSynthesisState: SynthesisState = {
   selected: {
     pitch: 1.25,
     rate: 1.5,
-    voice: null,
+    voice: undefined,
   },
   speaking: {
     process: {
@@ -29,13 +29,13 @@ export const initialSynthesisState: SynthesisState = {
       isRunning: false,
     },
     content: {
-      utterance: null,
-      utteranceOptions: null,
+      utterance: undefined,
+      utteranceOptions: undefined,
     },
   },
 };
 
-export const utteranceEvents = [
+export const UTTERANCE_EVENTS = [
   'boundary',
   'end',
   'error',

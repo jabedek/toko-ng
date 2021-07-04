@@ -32,8 +32,8 @@
         </div>
       </div>
 
-      <div>
-        Pitch
+      <div class="form-field form-field--inline">
+        <label class="form-field__label"> Pitch </label>
         <input
           type="range"
           min="0.25"
@@ -45,8 +45,8 @@
         {{ selected.pitch }}
       </div>
 
-      <div>
-        Rate
+      <div class="form-field form-field--inline">
+        <label class="form-field__label"> Rate </label>
         <input
           type="range"
           [attr.min]="rates[0]"

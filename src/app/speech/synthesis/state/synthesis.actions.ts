@@ -13,78 +13,78 @@ import { DefaultRate } from '../models/synthesis.constants';
 
 // ### State.defaults
 export const loadDefaults = createAction(
-  '[App/Speech Synthesis] Load Synthesis Rates',
+  '[App/Speech Synth] Load Synthesis Rates',
   props<{ defaults: SynthesisDefaults }>()
 );
 export const loadSynthesisPitches = createAction(
-  '[App/Speech Synthesis] Load Synthesis Pitches',
+  '[App/Speech Synth] Load Synthesis Pitches',
   props<{ pitches: DefaultPitch[] }>()
 );
 export const loadSynthesisRates = createAction(
-  '[App/Speech Synthesis] Load Synthesis Rates',
+  '[App/Speech Synth] Load Synthesis Rates',
   props<{ rates: DefaultRate[] }>()
 );
 export const loadRecommendedVoices = createAction(
-  '[App/Speech Synthesis] Load Recommended Voices',
+  '[App/Speech Synth] Load Recommended Voices',
   props<{ recommendedVoices: RecommendedVoices }>()
 );
 export const loadVoices = createAction(
-  '[App/Speech Synthesis] Load Voices',
+  '[App/Speech Synth] Load Voices',
   props<{ voices: SpeechSynthesisVoice[] }>()
 );
 
 // ### State.selected
 export const setSelected = createAction(
-  '[App/Speech Synthesis] Set Selected',
+  '[App/Speech Synth] Set Selected',
   props<{ selected: SynthesisSelected }>()
 );
 export const setSelectedPitch = createAction(
-  '[App/Speech Synthesis] Set Selected Pitch',
+  '[App/Speech Synth] Set Selected Pitch',
   props<{ pitch: number }>()
 );
 export const setSelectedRate = createAction(
-  '[App/Speech Synthesis] Set Selected Rate',
+  '[App/Speech Synth] Set Selected Rate',
   props<{ rate: number }>()
 );
 export const setSelectedVoice = createAction(
-  '[App/Speech Synthesis] Set Selected Voice',
+  '[App/Speech Synth] Set Selected Voice',
   props<{ voice: SpeechSynthesisVoice }>()
 );
 
 // ### State.speaking
 export const setSpeaking = createAction(
-  '[App/Speech Synthesis] Set Speaking',
+  '[App/Speech Synth] Set Speaking',
   props<{ speaking: SynthesisSpeaking }>()
 );
 
 // ### State.speaking.process
 export const setSpeakingProcess = createAction(
-  '[App/Speech Synthesis] Set Speaking Process',
+  '[App/Speech Synth] Set Speaking Process',
   props<{ process: SpeakingProcess }>()
 );
 export const setIsRunning = createAction(
-  '[App/Speech Synthesis] Set Is-Running',
+  '[App/Speech Synth] Set Is-Running',
   props<{ isRunning: boolean }>()
 );
 export const setIsPausedWhileSpeaking = createAction(
-  '[App/Speech Synthesis] Set Is-Paused-While-Speaking',
+  '[App/Speech Synth] Set Is-Paused-While-Speaking',
   props<{ isPausedWhileSpeaking: boolean }>()
 );
 export const setIsMakingSoundNow = createAction(
-  '[App/Speech Synthesis] Set Is-Making-Sound-Now',
+  '[App/Speech Synth] Set Is-Making-Sound-Now',
   props<{ isMakingSoundNow: boolean }>()
 );
 
 // ### State.speaking.content
 export const setSpeakingContent = createAction(
-  '[App/Speech Synthesis] Set Speaking Content',
+  '[App/Speech Synth] Set Speaking Content',
   props<{ content: SpeakingContent }>()
 );
 export const setUtterance = createAction(
-  '[App/Speech Synthesis] Set Utterance',
+  '[App/Speech Synth] Set Utterance',
   props<{ utterance: SpeechSynthesisUtterance }>()
 );
 export const setUtteranceOptions = createAction(
-  '[App/Speech Synthesis] Set Options',
+  '[App/Speech Synth] Set Options',
   props<{ utteranceOptions: SpeechSynthesisUtteranceOptions }>()
 );

@@ -26,7 +26,7 @@ export function logActions(
   reducer: ActionReducer<SynthesisState>
 ): ActionReducer<SynthesisState> {
   return function (state, action) {
-    if (action.type.includes('App/')) {
+    if (action.type.includes('App/Speech Synth')) {
       console.log(`%c ${action.type}`, 'color: #BADA55; font-weight: 700;');
     }
 

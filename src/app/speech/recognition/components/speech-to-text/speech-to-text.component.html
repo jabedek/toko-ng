@@ -1,0 +1,53 @@
+<ng-container *ngIf="langs$ | async as langs">
+  <div class="form-field">
+    <label class="form-field__label"> Language: </label>
+    <select
+      [(ngModel)]="selected.lang"
+      (change)="updateSelected('lang')"
+      class="form-field__control"
+    >
+      <option value="">- Select a language -</option>
+      <option *ngFor="let lang of langs" [ngValue]="lang">
+        {{ lang.name }} {{ lang.langCode }}
+      </option>
+    </select>
+  </div>
+
+  <div class="form-field">
+    <label class="form-field__label">interimResults</label>
+    <section>
+      Yes
+      <input
+        type="radio"
+        [(ngModel)]="selected.interimResults"
+        (change)="updateSelected('interimResults')"
+        class="form-field__control"
+        value="true"
+      />
+    </section>
+    <section>
+      No
+      <input
+        type="radio"
+        [(ngModel)]="selected.interimResults"
+        (change)="updateSelected('interimResults')"
+        class="form-field__control"
+        value="false"
+      />
+    </section>
+  </div>
+</ng-container>
+
+<div class="form-actions">
+  <button type="button" (click)="listen()" class="form-actions__button">
+    Listen
+  </button>
+
+  <button
+    type="button"
+    (click)="stop()"
+    class="form-actions__button form-actions__button--secondary"
+  >
+    Stop listening
+  </button>
+</div>

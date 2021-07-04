@@ -1,4 +1,4 @@
-import { SpeechService } from './../speech/speech.service';
+import { SynthService } from '../speech/synthesis/synthesis.service';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -7,7 +7,7 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
-  constructor(private service: SpeechService) {}
+  constructor(private service: SynthService) {}
 
   ngOnInit(): void {}
 }

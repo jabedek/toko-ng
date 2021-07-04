@@ -1,0 +1,13 @@
+.form-field {
+  display: flex;
+  flex-direction: column;
+
+  &__label {
+    width: 100px;
+  }
+
+  &--inline {
+    display: inline-flex;
+    margin-right: 1rem;
+  }
+}

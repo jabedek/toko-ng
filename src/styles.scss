@@ -1,1 +1,47 @@
 /* You can add global styles to this file, and also import other style files */
+@import "~normalize.css";
+
+@font-face {
+  font-family: Roboto;
+  src: url("./assets/fonts/Roboto/Roboto-ThinItalic.ttf") format("truetype");
+  src: url("./assets/fonts/Roboto/Roboto-Black.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-BlackItalic.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-Bold.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-BoldItalic.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-Italic.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-Light.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-LightItalic.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-Medium.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-MediumItalic.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-Regular.ttf") format("truetype"),
+    url("./assets/fonts/Roboto/Roboto-ThinItalic.ttf") format("truetype");
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto Light", "arial", sans-serif;
+}
+
+button {
+  font-size: 0.9rem;
+  padding: 0.3em 0.74em;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  & + button {
+    margin-left: 5px;
+  }
+}
+
+input[type="range"] {
+  width: 180px;
+}
+
+input[type="textarea"],
+input[type="select"] {
+  width: 360px;
+}
