@@ -1,31 +1,13 @@
-import {
-  selectDefaultRates,
-  selectDefaultRecommendedVoices,
-  selectDefaultVoices,
-  selectSynthesisDefaults,
-  selectSynthesisSelected,
-} from './../../state/synthesis.selectors';
-import { SpeechService } from './../../../speech.service';
-import { recommendedVoicesEN } from './../../configs/en/recommended-voices-en';
-import {
-  setIsRunning,
-  setSelected,
-  setSelectedPitch,
-  setSelectedRate,
-  setSelectedVoice,
-} from './../../state/synthesis.actions';
 import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
-import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/app-state/app-state.model';
-import { selectSynthesis } from '../../state/synthesis.selectors';
+import { Subject, Observable } from 'rxjs';
 import {
   RecommendedVoices,
   SynthesisSelected,
 } from '../../models/synthesis.model';
 import { DefaultRate } from '../../models/synthesis.constants';
-import { Subject, Observable } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { SpeechService } from './../../../speech.service';
 
 @Component({
   selector: 'app-text-to-speech',
