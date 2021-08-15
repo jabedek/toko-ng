@@ -1,6 +1,6 @@
 # TokoNg
 
-Making use of Angular Web Speech API.
+Making use of Web Speech API with Angular.
 
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.1.0.
