@@ -116,8 +116,68 @@
       </button>
     </div>
   </div>
+
+  <div class="side-panel">
+    <section class="section section--process-view">
+      <label class="label"> Process Events View </label>
+      <ul class="process-messages" #messagesEl>
+        <li *ngFor="let message of service.processMessages" class="message">
+          <div class="message-top">
+            <section class="message__event-type">
+              <!-- <pre>{{ message | json }}</pre> -->
+              <span>
+                {{ message.eventType }}
+
+                <ng-container *ngIf="message.name">
+                  {{ " - " + message.name }}
+                </ng-container>
+              </span>
+            </section>
+            <section class="message__date">
+              <span>
+                {{ message.date }}
+              </span>
+            </section>
+          </div>
+          <div class="message-bottom">
+            <section
+              class="message__result"
+              *ngIf="message.name"
+              [ngClass]="{ 'final-result': message.name }"
+            >
+              <p class="message">
+                {{ message.name }}
+              </p>
+            </section>
+
+            <section class="message__error" *ngIf="message.error">
+              <ng-container [ngSwitch]="message.error">
+                <span class="message__error-desc" *ngSwitchCase="'no-speech'">
+                  [no-speech] Nie wykryto mowy ze strony użytkownika (nikt nic
+                  nie mówi?).
+                </span>
+                <span
+                  class="message__error-desc"
+                  *ngSwitchCase="'audio-capture'"
+                >
+                  [audio-capture] Problem z wyłapaniem audio.
+                </span>
+                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">
+                  [not-allowed] Brak zezwolenia.
+                </span>
+                <span class="message__error-desc" *ngSwitchDefault>
+                  [{{ message.error }}] Błąd
+                </span>
+              </ng-container>
+            </section>
+          </div>
+        </li>
+      </ul>
+    </section>
+  </div>
+
   <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
-<p>
+<p class="speech-state">
   <span> current event: {{ state ? state : "" }}</span>
 </p>

@@ -1,4 +1,4 @@
-import { NextEventFn } from './shared.models';
+import { NextEventFn, ProcessMessage } from './shared.models';
 import { Subscription } from 'rxjs';
 import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
 
@@ -103,3 +103,10 @@ export type UtteranceListenerAttacher = (
   detachListenersFn: UtteranceListenerDetacher,
   nextEventFn: NextEventFn
 ) => SpeechSynthesisUtterance;
+
+export interface SynthesisProcessMessage extends ProcessMessage {
+  name?: string;
+  results?: {
+    [key: string]: any;
+  };
+}

@@ -175,7 +175,7 @@ export class RecogService2 {
     // console.log('handling...', event);
 
     const processMessage: RecognitionProcessMessage = {
-      date: moment().format('yyyy-mm-DD hh:mm:ss'),
+      date: moment().format('yyyy-mm-DD HH:mm:ss'),
       eventType: event.type,
     };
 

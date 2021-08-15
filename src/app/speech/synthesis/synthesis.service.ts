@@ -35,6 +35,7 @@ import {
   SpeechSynthesisUtteranceEventType,
   UtteranceListenerAttacher,
   UtteranceListenerDetacher,
+  SynthesisProcessMessage,
 } from './../../shared/models/synthesis.model';
 import {
   loadRecommendedVoices,
@@ -51,6 +52,7 @@ import {
   attachSynthUtteranceListeners,
   detachSynthUtteranceListeners,
 } from './utils/speech-synthesis-events.utils';
+import * as moment from 'moment';
 
 @Injectable({
   providedIn: 'root',
@@ -58,6 +60,8 @@ import {
 export class SynthService implements OnDestroy {
   eventSubject: Subject<SynthesisEvent> = new Subject();
   speechStateSubect: Subject<SpeechSynthesisUtteranceEventType> = new Subject();
+
+  processMessages: SynthesisProcessMessage[] = [];
 
   // Defaults
   defaults$: Observable<SynthesisDefaults> = this.store.select(
@@ -70,8 +74,6 @@ export class SynthService implements OnDestroy {
   );
   voices$: Observable<SpeechSynthesisVoice[]> =
     this.store.select(selectDefaultVoices);
-
-  utterance: SpeechSynthesisUtterance | undefined = undefined;
 
   // Selected
   selected$: Observable<SynthesisSelected> = this.store.select(
@@ -86,6 +88,7 @@ export class SynthService implements OnDestroy {
   speaking: SynthesisSpeaking | undefined;
 
   paused = false;
+  utterance: SpeechSynthesisUtterance | undefined = undefined;
 
   // other
   private eventsSubs: UtteranceEventsSubscriptions[] = [];
@@ -100,7 +103,12 @@ export class SynthService implements OnDestroy {
 
     setTimeout(() => {
       this.initSynthesis();
-      this.utterance = this.createUtteranceWithEventListenersOnly();
+
+      const utterance = this.createUtteranceWithEventListenersOnly();
+      if (utterance) {
+        this.utterance = utterance;
+      }
+      console.log(speechSynthesis, this.utterance);
     }, 0);
   }
 
@@ -123,17 +131,22 @@ export class SynthService implements OnDestroy {
     );
 
     setTimeout(() => {
+      console.log('init 1');
+
       voices = speechSynthesis.getVoices();
+      console.log(voices);
       this.store.dispatch(loadVoices({ voices }));
       this.store.dispatch(setSelectedVoice({ voice: voices[0] || undefined }));
       voice = voices.find((v) => v.name === voiceName0)!;
 
       if (!voices.length) {
+        console.log('init 2');
         speechSynthesis.addEventListener('voiceschanged', (event) => {
           console.log('voiceschanged', event);
 
           voices = speechSynthesis.getVoices();
           voice = voices.find((v) => v.name === voiceName0)!;
+
           this.store.dispatch(loadVoices({ voices }));
           this.store.dispatch(
             setSelectedVoice({ voice: POLISH ? voice : voices[0] || undefined })
@@ -151,15 +164,19 @@ export class SynthService implements OnDestroy {
   dispatchEventHandle(event: SynthesisEvent) {
     console.log('handling...', event.type, event);
 
+    const processMessage: SynthesisProcessMessage = {
+      date: moment().format('yyyy-mm-DD HH:mm:ss'),
+      eventType: event.type,
+    };
     switch (event.type) {
       case SpeechSynthesisUtteranceEventTypes.start:
         this.paused = false;
         break;
       case SpeechSynthesisUtteranceEventTypes.boundary:
+        processMessage.name = (event as SpeechSynthesisEvent).name;
         readBoundaryEvent(event as SpeechSynthesisEvent);
         break;
       case SpeechSynthesisUtteranceEventTypes.error:
-        console.log(event);
         break;
       case SpeechSynthesisUtteranceEventTypes.mark:
         break;
@@ -180,6 +197,7 @@ export class SynthService implements OnDestroy {
           event.type as SpeechSynthesisUtteranceEventType
         );
 
+    this.processMessages.push(processMessage);
     this.ref.tick(); // update component from here (instead of standard CDR)
   }
 
@@ -299,7 +317,10 @@ export class SynthService implements OnDestroy {
    * Stops any current speech synthesis and clears current speaking info.
    */
   stop(): void {
+    console.log('stop 1');
+
     if (speechSynthesis.speaking) {
+      console.log('stop 2');
       speechSynthesis.cancel();
 
       this.store.dispatch(
@@ -329,26 +350,59 @@ export class SynthService implements OnDestroy {
     pitch: number,
     text: string
   ): void {
-    const utterance = this.createUtteranceWithEventListenersOnly(text);
-    if (this.selected) {
-      utterance.voice = voice;
-      utterance.rate = rate;
-      utterance.pitch = pitch;
-      this.utterance = utterance;
+    setTimeout(() => {
+      console.log('synthesizeSpeechFromText 1');
+      // BŁAD DO NAPRAWIENIA, ŚCIEŻKA:
+      // - KLIKNIJ 'PAUZA'
+      // - ODŚWIEŻ STRONĘ
+      // - KLIKNIJ 'SPEAK TEXT' >>> NIE ZADZIALA CHYBA ZE KLIKNIEMY 2 RAZ
+      // const utterance = this.createUtteranceWithEventListenersOnly(text);
+      if (this.utterance) {
+        if (this.selected) {
+          console.log('synthesizeSpeechFromText 2');
+          this.utterance.voice = voice;
+          this.utterance.rate = rate;
+          this.utterance.pitch = pitch;
+          // this.utterance = utterance;
 
-      this.utterance
-        ? speechSynthesis.speak(this.utterance)
-        : console.log('error');
-    }
+          this.utterance
+            ? speechSynthesis.speak(this.utterance)
+            : console.log('error');
+        }
+      }
+    }, 0);
   }
 
+  // prepareUtterance(
+  //   voice: SpeechSynthesisVoice,
+  //   rate: number,
+  //   pitch: number,
+  //   text: string
+  // ) {
+  //   let utterance = new SpeechSynthesisUtterance(text);
+  //   let newUtterance: SpeechSynthesisUtterance | null = null;
+  //   if (utterance) {
+  //     newUtterance = attachSynthUtteranceListeners(
+  //       utterance,
+  //       detachSynthUtteranceListeners,
+  //       this.nextEvent
+  //     );
+  //     console.log(utterance, newUtterance);
+  //   }
+  // }
+
   private createUtteranceWithEventListenersOnly(text: string = '') {
-    const utterance = attachSynthUtteranceListeners(
-      new SpeechSynthesisUtterance(text),
-      detachSynthUtteranceListeners,
-      this.nextEvent
-    );
-    console.log(utterance);
-    return utterance;
+    let utterance = new SpeechSynthesisUtterance(text);
+    let newUtterance: SpeechSynthesisUtterance | null = null;
+    if (utterance) {
+      newUtterance = attachSynthUtteranceListeners(
+        utterance,
+        detachSynthUtteranceListeners,
+        this.nextEvent
+      );
+      console.log(utterance, newUtterance);
+    }
+
+    return newUtterance;
   }
 }

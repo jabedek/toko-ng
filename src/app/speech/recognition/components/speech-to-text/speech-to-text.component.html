@@ -67,7 +67,7 @@
 
   <div class="side-panel">
     <section class="section section--process-view">
-      <label class="label"> Process View </label>
+      <label class="label"> Process Events View </label>
       <ul class="process-messages" #messagesEl>
         <li *ngFor="let message of service.processMessages" class="message">
           <div class="message-top">
@@ -132,6 +132,6 @@
   </div>
   <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
-<p>
+<p class="speech-state">
   <span> current event: {{ state ? state : "" }}</span>
 </p>

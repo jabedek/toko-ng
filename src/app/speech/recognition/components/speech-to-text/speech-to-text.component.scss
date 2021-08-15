@@ -4,6 +4,9 @@
   position: relative;
   // justify-content: space-between;
 }
+.speech-state {
+  margin: 0.5rem 0;
+}
 
 .form {
   width: 400px;
@@ -140,28 +143,18 @@
 }
 
 .message-top {
-  // border-top: 1px solid grey;
-  // border-bottom: 1px solid grey;
   justify-content: space-between;
-}
-
-.message-bottom {
-  // border-bottom: 1px solid black;
 }
 
 .message {
   font-family: "Space Mono", monospace !important;
   font-size: 0.9rem;
-
   display: flex;
   flex-direction: column;
-
   border-bottom: 1px solid grey;
-  // border-bottom: 1px solid black;
 
   &__date {
     padding: 0 0.2rem;
-    // width: 200px;
     flex-shrink: 0;
     > span {
       font-family: "Space Mono", monospace !important;
@@ -170,7 +163,6 @@
 
   &__event-type {
     padding: 0 0.2rem;
-    // width: 90px;
     flex-shrink: 0;
 
     > span {

@@ -1,4 +1,5 @@
 import { Subscription } from 'rxjs';
+import { ProcessMessage } from './shared.models';
 export interface RecognitionState {
   recognitionObj: SpeechRecognition | undefined;
   defaults: RecognitionDefaults;
@@ -23,15 +24,12 @@ export interface RecognitionLanguage {
   name?: string;
 }
 
-export interface RecognitionProcessMessage {
-  date: string | Date;
-  eventType: string;
+export interface RecognitionProcessMessage extends ProcessMessage {
   topResult?: {
     transcript?: string;
     confidence?: string;
     isFinal?: boolean;
   };
-  error?: string;
 }
 
 // Event handling
