@@ -1,6 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 @import "~normalize.css";
 
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
+
 @font-face {
   font-family: Roboto;
   src: url("./assets/fonts/Roboto/Roboto-ThinItalic.ttf") format("truetype");
@@ -26,6 +28,15 @@ h2 {
   font-family: "Space Mono", monospace !important;
   margin: 0.6rem 0;
   text-shadow: 0.12rem 0.15rem 0rem rgba(0, 117, 255, 1);
+
+  span {
+    background: white;
+    color: rgba(0, 117, 255, 1);
+    text-shadow: none;
+    font-weight: 700;
+    border-radius: 0.25rem;
+    padding: 0.15rem 0.4rem;
+  }
 }
 
 * {
