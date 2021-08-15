@@ -1,7 +1,7 @@
 import {
   RecognitionLanguage,
   RecognitionSelected,
-} from './../models/recognition.model';
+} from './../../../shared/models/recognition.model';
 import { createAction, props } from '@ngrx/store';
 
 // ### State.recognition

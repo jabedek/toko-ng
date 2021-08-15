@@ -1,3 +1,4 @@
+import { SynthesisState } from './../../shared/models/synthesis.model';
 import { synthesisFeatureKey } from './state/synthesis.selectors';
 import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
@@ -6,7 +7,6 @@ import { TextToSpeechComponent } from './components/text-to-speech/text-to-speec
 import { SpeechSynthesisModule } from '@ng-web-apis/speech';
 import { synthesisReducer } from './state/synthesis.reducer';
 import { StoreModule, ActionReducer } from '@ngrx/store';
-import { SynthesisState } from './models/synthesis.model';
 
 @NgModule({
   declarations: [TextToSpeechComponent],

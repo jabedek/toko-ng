@@ -1,7 +1,21 @@
-import { initialRecognitionState } from './../models/recognition.constants';
-
 import { createReducer, on } from '@ngrx/store';
 import * as SynthesisActions from './recognition.actions';
+import { RecognitionState } from 'src/app/shared/models/recognition.model';
+
+export const initialRecognitionState: RecognitionState = {
+  recognitionObj: undefined,
+  defaults: {
+    langs: [],
+  },
+  selected: {
+    lang: undefined,
+    interimResults: true,
+    maxAlternatives: 5,
+    terms: [],
+    grammar: '',
+    continuous: false,
+  },
+};
 
 export const recognitionReducer = createReducer(
   initialRecognitionState,

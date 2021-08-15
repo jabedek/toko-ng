@@ -1,6 +1,7 @@
 .text-to-speech-container {
   height: 100%;
   display: flex;
+  position: relative;
 }
 
 .form {
@@ -96,4 +97,43 @@
   flex-direction: row;
   justify-content: center;
   align-content: center;
+}
+
+.state {
+  position: absolute;
+  height: 50px;
+  width: 50px;
+  right: 0;
+  top: 0;
+  border-radius: 100%;
+  background: grey;
+  box-shadow: 0.2rem 0.25rem 0.3rem rgba(0, 0, 0, 0.25);
+
+  &--start {
+    background: #1f5a98;
+  }
+
+  &--pause {
+    background: #112d4e;
+  }
+
+  &--resume {
+    background: #1f5a98;
+  }
+
+  &--boundary {
+    background: #2772c2;
+  }
+
+  &--mark {
+    background: #ffffff;
+  }
+
+  &--error {
+    background: #f42e01;
+  }
+
+  &--end {
+    background: grey;
+  }
 }

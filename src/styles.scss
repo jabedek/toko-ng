@@ -22,6 +22,12 @@ body {
   height: 100vh;
 }
 
+h2 {
+  font-family: "Space Mono", monospace !important;
+  margin: 0.6rem 0;
+  text-shadow: 0.12rem 0.15rem 0rem rgba(0, 117, 255, 1);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -33,9 +39,17 @@ button {
   font-size: 0.85rem;
   padding: 0.28em 0.7em;
   text-transform: uppercase;
+  background: white;
+  border: none;
+  border-radius: 0.2rem;
+  box-shadow: 0.1rem 0.15rem 0.1rem rgba(0, 0, 0, 0.25);
+  position: relative;
+  cursor: pointer;
+  bottom: 0;
 
   &:hover {
-    cursor: pointer;
+    box-shadow: 0.1rem 0.15rem 0.1rem rgba(0, 0, 0, 0.45);
+    bottom: 1px;
   }
 
   & + button {

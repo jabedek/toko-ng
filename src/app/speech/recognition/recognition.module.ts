@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { StoreModule, ActionReducer } from '@ngrx/store';
 import { SpeechToTextComponent } from './components/speech-to-text/speech-to-text.component';
 import { SpeechRecognitionService } from '@ng-web-apis/speech';
-import { RecognitionState } from './models/recognition.model';
+import { RecognitionState } from './../../shared/models/recognition.model';
 
 @NgModule({
   declarations: [SpeechToTextComponent],

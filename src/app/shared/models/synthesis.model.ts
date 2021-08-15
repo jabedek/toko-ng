@@ -1,5 +1,5 @@
+import { NextEventFn } from './shared.models';
 import { Subscription } from 'rxjs';
-import { DefaultRate, DefaultPitch } from './synthesis.constants';
 import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
 
 export interface SynthesisState {
@@ -20,6 +20,9 @@ export interface SynthesisSelected {
   rate: number | undefined;
   voice: SpeechSynthesisVoice | undefined;
 }
+
+export type DefaultRate = 0.25 | 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2;
+export type DefaultPitch = 0.25 | 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2;
 
 export interface SynthesisSpeaking {
   content: SpeakingContent;
@@ -53,35 +56,50 @@ export interface RecommendedVoices {
   [key: string]: boolean;
 }
 
-// Utterance Events
+// Event handling
 
 export interface UtteranceEventsSubscriptions {
   type: string;
   subscription: Subscription | undefined;
 }
 
-export type ListenersAttacherFn = (
-  target: SpeechSynthesisUtterance,
-  logAllEvents?: boolean
-) => void;
+// export type ListenersAttacherFn = (
+//   target: SpeechSynthesisUtterance,
+//   logAllEvents?: boolean
+// ) => void;
 
-// 3rd parties
+export type SynthesisEvent =
+  | Event
+  | SpeechSynthesisEvent
+  | SpeechSynthesisErrorEvent;
 
-/** This Web Speech API interface contains information about the current state of SpeechSynthesisUtterance objects that have been processed in the speech service. */
-export interface SpeechSynthesisEvent extends Event {
-  readonly charIndex: number;
-  readonly charLength: number;
-  readonly elapsedTime: number;
-  readonly name: string;
-  readonly utterance: SpeechSynthesisUtterance;
+// export type SpeechSynthesisEventType = 'voiceschanged';
+
+export enum SpeechSynthesisUtteranceEventTypes {
+  start = 'start',
+  end = 'end',
+  pause = 'pause',
+  resume = 'resume',
+  boundary = 'boundary',
+  mark = 'mark',
+  error = 'error',
 }
 
-declare var SpeechSynthesisEvent: {
-  prototype: SpeechSynthesisEvent;
-  new (
-    type: string,
-    eventInitDict: SpeechSynthesisEventInit
-  ): SpeechSynthesisEvent;
-};
+export type SpeechSynthesisUtteranceEventType =
+  | 'start'
+  | 'end'
+  | 'pause'
+  | 'resume'
+  | 'boundary'
+  | 'mark'
+  | 'error';
 
-// 3rd parties //
+export type UtteranceListenerDetacher = (
+  target: SpeechSynthesisUtterance
+) => SpeechSynthesisUtterance;
+
+export type UtteranceListenerAttacher = (
+  target: SpeechSynthesisUtterance,
+  detachListenersFn: UtteranceListenerDetacher,
+  nextEventFn: NextEventFn
+) => SpeechSynthesisUtterance;

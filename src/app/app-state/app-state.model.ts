@@ -1,5 +1,5 @@
-import { RecognitionState } from './../speech/recognition/models/recognition.model';
-import { SynthesisState } from '../speech/synthesis/models/synthesis.model';
+import { RecognitionState } from '../shared/models/recognition.model';
+import { SynthesisState } from '../shared/models/synthesis.model';
 
 export interface AppState {
   synthesis: SynthesisState;

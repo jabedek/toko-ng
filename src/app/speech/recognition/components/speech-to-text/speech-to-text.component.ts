@@ -4,23 +4,15 @@ import {
   RecognitionLanguage,
   RecognitionSelected,
   SpeechRecognitionEventType,
-} from './../../models/recognition.model';
-import { RecogService } from './../../recognition.service';
+} from './../../../../shared/models/recognition.model';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { SPEECH_RECOGNITION_MAX_ALTERNATIVES } from '@ng-web-apis/speech';
 import { RecogService2 } from '../../recognition-2.service';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/app-state/app-state.model';
 
-declare var webkitSpeechRecognition: any;
 @Component({
   selector: 'app-speech-to-text',
   templateUrl: './speech-to-text.component.html',
   styleUrls: ['./speech-to-text.component.scss'],
-  providers: [
-    // RecogService,
-    // { provide: SPEECH_RECOGNITION_MAX_ALTERNATIVES, useValue: 10 },
-  ],
+  providers: [],
 })
 export class SpeechToTextComponent implements OnInit, OnDestroy {
   // Defaults
@@ -28,7 +20,7 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
 
   state: SpeechRecognitionEventType = 'end';
 
-  // Selected
+  // Selected (initial values)
   selected: RecognitionSelected = {
     lang: undefined,
     interimResults: true,
@@ -38,24 +30,24 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
     continuous: true,
   };
 
-  termsDisplayed = 'hej, cześć, test';
+  termsToFind = 'hej, cześć, test';
 
   // other
   private destroy$: Subject<void> = new Subject();
 
-  constructor(public recog: RecogService2) {
+  constructor(public service: RecogService2) {
     this.subscribeRecogSelected();
 
-    this.langs$ = this.recog.langs$;
-    this.recog.updateSelected(
+    this.langs$ = this.service.langs$;
+    this.service.updateSelected(
       'lang',
       DEFAULT_RECOGNITION_LANGUAGES.find((l) => l.langCode.includes('pl'))
     );
   }
 
   ngOnInit(): void {
-    this.recog.speechStateSubect.subscribe((s) => (this.state = s));
-    this.recog.eventSubject.subscribe((d) => {});
+    this.service.speechStateSubect.subscribe((s) => (this.state = s));
+    // this.service.eventSubject.subscribe((d) => {});
   }
 
   ngOnDestroy() {
@@ -64,11 +56,11 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
   }
 
   listen() {
-    this.recog.listen();
+    this.service.listen();
   }
 
   stop() {
-    this.recog.stop();
+    this.service.stop();
   }
 
   updateSelected(
@@ -77,15 +69,15 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
     console.log('speech to text2');
 
     let value: any =
-      key === 'terms'
-        ? this.textToWords(this.termsDisplayed)
-        : this.selected[key];
+      key === 'terms' ? this.textToWords(this.termsToFind) : this.selected[key];
 
-    this.recog.updateSelected(key, value);
+    this.service.updateSelected(key, value);
   }
 
   subscribeRecogSelected() {
-    this.recog.selected$.subscribe((data) => {
+    this.service.selected$.subscribe((data) => {
+      console.log('data.interimResults', data.interimResults);
+
       this.selected.interimResults = data.interimResults;
       this.selected.lang = data.lang;
     });

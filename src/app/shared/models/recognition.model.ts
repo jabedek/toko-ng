@@ -23,53 +23,51 @@ export interface RecognitionLanguage {
   name?: string;
 }
 
-export interface RecogEventsSubscriptions {
-  type: string;
-  subscription: Subscription | undefined;
+export interface RecognitionProcessMessage {
+  date: string | Date;
+  eventType: string;
+  topResult?: {
+    transcript?: string;
+    confidence?: string;
+  };
+  error?: string;
 }
 
-export type ListenersAttacherFn = (
-  target: SpeechRecognition,
-  logAllEvents?: boolean
-) => void;
-
-export interface SpecificHandlers {
-  [eventType: string]: (event: any) => any | void;
-}
-
+// Event handling
 export type RecognitionEvent =
   | Event
   | SpeechRecognitionEvent
   | SpeechRecognitionErrorEvent;
 
 export enum SpeechRecognitionEventTypes {
+  start = 'start',
+  end = 'end',
   audioend = 'audioend',
   audiostart = 'audiostart',
-  end = 'end',
   soundend = 'soundend',
   soundstart = 'soundstart',
   speechend = 'speechend',
   speechstart = 'speechstart',
-  start = 'start',
   error = 'error',
   nomatch = 'nomatch',
   result = 'result',
 }
 
 export type SpeechRecognitionEventType =
+  | 'start'
+  | 'end'
   | 'audioend'
   | 'audiostart'
-  | 'end'
   | 'soundend'
   | 'soundstart'
   | 'speechend'
   | 'speechstart'
-  | 'start'
   | 'error'
   | 'nomatch'
   | 'result';
 
-interface SpeechRecognitionEventMap {
+// from lib
+export interface SpeechRecognitionEventMap {
   audioend: Event;
   audiostart: Event;
   end: Event;
@@ -81,14 +79,4 @@ interface SpeechRecognitionEventMap {
   speechend: Event;
   speechstart: Event;
   start: Event;
-}
-
-export interface ProcessMessage {
-  date: string | Date;
-  eventType: string;
-  topResult?: {
-    transcript?: string;
-    confidence?: string;
-  };
-  error?: string;
 }

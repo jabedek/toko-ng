@@ -1,6 +1,6 @@
+import { SynthesisState } from './../../../shared/models/synthesis.model';
 import { AppState } from '../../../app-state/app-state.model';
 import { createSelector, createFeatureSelector } from '@ngrx/store';
-import { SynthesisState } from '../models/synthesis.model';
 
 export const synthesisFeatureKey = 'synthesis';
 

@@ -1,6 +1,31 @@
-import { initialSynthesisState } from './../models/synthesis.constants';
+import { SynthesisState } from './../../../shared/models/synthesis.model';
 import { createReducer, on } from '@ngrx/store';
 import * as SynthesisActions from './synthesis.actions';
+
+export const initialSynthesisState: SynthesisState = {
+  defaults: {
+    pitches: [],
+    rates: [],
+    recommendedVoices: {},
+    voices: [],
+  },
+  selected: {
+    pitch: 1.25,
+    rate: 1.5,
+    voice: undefined,
+  },
+  speaking: {
+    process: {
+      isMakingSoundNow: false,
+      isPausedWhileUttering: false,
+      isRunning: false,
+    },
+    content: {
+      utterance: undefined,
+      utteranceOptions: undefined,
+    },
+  },
+};
 
 export const synthesisReducer = createReducer(
   initialSynthesisState,

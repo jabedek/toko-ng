@@ -1,3 +1,4 @@
+<h2>Recognition</h2>
 <div class="speech-to-text-container">
   <div *ngIf="langs$ | async as langs" class="form">
     <div class="field">
@@ -15,7 +16,9 @@
     </div>
 
     <div class="field">
-      <label class="field__label">interimResults</label>
+      <label class="field__label"
+        >Capture interim results (results that are not yet final)</label
+      >
       <section>
         Yes
         <input
@@ -23,7 +26,7 @@
           [(ngModel)]="selected.interimResults"
           (change)="updateSelected('interimResults')"
           class="field__control"
-          value="true"
+          [value]="true"
         />
       </section>
       <section>
@@ -33,7 +36,7 @@
           [(ngModel)]="selected.interimResults"
           (change)="updateSelected('interimResults')"
           class="field__control"
-          value="false"
+          [value]="false"
         />
       </section>
     </div>
@@ -41,7 +44,7 @@
     <div class="field">
       <label class="field__label">Terms to focus on</label>
       <input
-        [(ngModel)]="termsDisplayed"
+        [(ngModel)]="termsToFind"
         (keydown)="updateSelected('terms')"
         class="field__control"
       />
@@ -66,47 +69,60 @@
     <section class="section section--process-view">
       <label class="label"> Process View </label>
       <ul class="process-messages">
-        <li *ngFor="let message of recog.processMessages" class="message">
-          <section class="message__date">
-            <span>
-              {{ message.date }}
-            </span>
-          </section>
-
-          <section class="message__event-type">
-            <span>
-              {{ message.eventType }}
-            </span>
-          </section>
-
-          <section class="message__result" *ngIf="message.topResult">
-            <span class="message__transcript">{{
-              message.topResult.transcript
-            }}</span>
-            <span class="message__confidence">{{
-              message.topResult.confidence
-            }}</span>
-          </section>
-
-          <section class="message__error" *ngIf="message.error">
-            <ng-container [ngSwitch]="message.error">
-              <span class="message__error-desc" *ngSwitchCase="'no-speech'"
-                >[no-speech] Nie wykryto mowy od strony użytkownika (nikt nic
-                nie mówi?)</span
-              >
-              <span class="message__error-desc" *ngSwitchDefault>
-                [{{ message.error }}] Błąd
+        <li *ngFor="let message of service.processMessages" class="message">
+          <div class="message-top">
+            <section class="message__date">
+              <span>
+                {{ message.date }}
               </span>
-            </ng-container>
-          </section>
+            </section>
+
+            <section class="message__event-type">
+              <span>
+                {{ message.eventType }}
+              </span>
+            </section>
+          </div>
+          <div class="message-bottom">
+            <section class="message__result" *ngIf="message.topResult">
+              <p class="message__transcript">
+                [wykryto]: "{{ message.topResult.transcript }}"
+              </p>
+              <p class="message__confidence">
+                [pewność]: {{ message.topResult.confidence }}
+              </p>
+            </section>
+
+            <section class="message__error" *ngIf="message.error">
+              <ng-container [ngSwitch]="message.error">
+                <span class="message__error-desc" *ngSwitchCase="'no-speech'">
+                  [no-speech] Nie wykryto mowy od strony użytkownika (nikt nic
+                  nie mówi?).
+                </span>
+                <span
+                  class="message__error-desc"
+                  *ngSwitchCase="'audio-capture'"
+                >
+                  [audio-capture] Problem z wyłapaniem audio.
+                </span>
+                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">
+                  [not-allowed] Brak zezwolenia.
+                </span>
+                <span class="message__error-desc" *ngSwitchDefault>
+                  [{{ message.error }}] Błąd
+                </span>
+              </ng-container>
+            </section>
+          </div>
         </li>
       </ul>
     </section>
 
     <section class="section">
-      <label class="label"> Found words:{{ recog.textDisplayed }} </label>
+      <label class="label"> Found words: {{ service.textDisplayed }} </label>
     </section>
   </div>
   <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
-state {{ state }}
+
+<p>current event: {{ state }}</p>

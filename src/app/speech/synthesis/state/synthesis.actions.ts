@@ -1,15 +1,16 @@
-import { DefaultPitch } from './../models/synthesis.constants';
-import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
 import {
+  DefaultPitch,
+  SynthesisDefaults,
   RecommendedVoices,
+  SynthesisSelected,
+  SynthesisSpeaking,
   SpeakingProcess,
   SpeakingContent,
-  SynthesisDefaults,
-  SynthesisSpeaking,
-  SynthesisSelected,
-} from '../models/synthesis.model';
+  DefaultRate,
+} from './../../../shared/models/synthesis.model';
+import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
+
 import { createAction, props } from '@ngrx/store';
-import { DefaultRate } from '../models/synthesis.constants';
 
 // ### State.defaults
 export const loadDefaults = createAction(

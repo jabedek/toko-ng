@@ -1,6 +1,4 @@
-<!-- <ng-container *ngIf="voices$ | async as voices">
-  <ng-container *ngIf="recommendedVoices$ | async as recommendedVoices">
-    <ng-container *ngIf="rates$ | async as rates"> -->
+<h2>Synthesis</h2>
 <div class="text-to-speech-container">
   <div *ngIf="defaults$ | async as defaults" class="form">
     <div
@@ -84,7 +82,7 @@
             />
           </div>
           <label class="field__label">
-            Start new speech on any value change in text input
+            Start new speech on any settings change
           </label>
         </div>
       </section>
@@ -118,4 +116,6 @@
       </button>
     </div>
   </div>
+  <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
+<p>current event: {{ state }}</p>

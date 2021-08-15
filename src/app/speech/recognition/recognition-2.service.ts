@@ -1,3 +1,12 @@
+import {
+  RecognitionEvent,
+  RecognitionProcessMessage,
+  RecognitionLanguage,
+  SpeechRecognitionEventTypes,
+  RecognitionDefaults,
+  RecognitionSelected,
+  SpeechRecognitionEventType,
+} from './../../shared/models/recognition.model';
 import { takeUntil } from 'rxjs/operators';
 import {
   selectRecognitionLangs,
@@ -17,19 +26,10 @@ import { AppState } from 'src/app/app-state/app-state.model';
 import { Injectable, ChangeDetectorRef, ApplicationRef } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Observable, Subject } from 'rxjs';
-import {
-  ProcessMessage,
-  RecogEventsSubscriptions,
-  RecognitionDefaults,
-  RecognitionEvent,
-  RecognitionLanguage,
-  RecognitionSelected,
-  SpecificHandlers,
-  SpeechRecognitionEventTypes,
-  SpeechRecognitionEventType,
-} from './models/recognition.model';
-import { RECOG_EVENTS } from './models/recognition.constants';
+import { RECOG_EVENTS } from './recognition.constants';
 import * as moment from 'moment';
+import { getGrammar, getTopResultFromResults } from './utils/recognition.utils';
+
 //
 
 declare var webkitSpeechRecognition: any;
@@ -43,16 +43,16 @@ const SpeechRecognition = webkitSpeechRecognition,
 })
 export class RecogService2 {
   eventSubject: Subject<RecognitionEvent> = new Subject();
-
   speechStateSubect: Subject<SpeechRecognitionEventType> = new Subject();
+
   recognition: SpeechRecognition | undefined;
   isStoppedSpeechRecog = false;
   isListening = false;
-  text = '';
+  foundWords = '';
   textDisplayed = '';
   tempWords = '';
 
-  processMessages: ProcessMessage[] = [];
+  processMessages: RecognitionProcessMessage[] = [];
 
   // Defaults
   defaults$: Observable<RecognitionDefaults> = this.store.select(
@@ -73,17 +73,16 @@ export class RecogService2 {
 
   // other
   private destroy$: Subject<void> = new Subject();
-  private eventsSubs: RecogEventsSubscriptions[] = [];
+  // private eventsSubs: RecogEventsSubscriptions[] = [];
 
   constructor(private store: Store<AppState>, public ref: ApplicationRef) {
     this.subscribeToStore();
-
     this.eventSubject.subscribe((event: RecognitionEvent) => {
-      this.eventHandleDispatcher(event);
+      this.dispatchEventHandle(event);
     });
 
     setTimeout(() => {
-      this.init();
+      this.initRecognition();
     }, 0);
   }
 
@@ -92,31 +91,67 @@ export class RecogService2 {
     this.destroy$.complete();
   }
 
-  /* Set up terms and grammar
-[line]: #JSGF V1.0; - states the format and version used. This always needs to be included first.
-[line]: grammar terms; - indicates a type of term that we want to recognise.
-[line]: public <term> - public declares that it is a public rule, the string in angle brackets defines the recognised name for this term (term).
-[line]: ' + terms.join(' | ') + ' - alternative values that will be recognised and accepted as appropriate values for the term.
-*/
-  getGrammar(termsList: string[]): string {
-    const terms = termsList || ['pies', 'kot', 'jeż'];
-    const grammar =
-      '#JSGF V1.0; grammar terms; public <terms> = ' + terms.join(' | ') + ' ;';
+  // Setup & config
+  private initRecognition() {
+    setTimeout(() => {
+      let recognition: SpeechRecognition = new SpeechRecognition();
 
-    return grammar;
+      if (recognition) {
+        recognition = this.configRecognition(recognition, this.selected!);
+        this.recognition = recognition;
+      } else {
+        setTimeout(() => {
+          if (recognition) {
+            recognition = this.configRecognition(recognition, this.selected!);
+            this.recognition = recognition;
+          } else {
+            // console.log('No Recognition found.');
+          }
+        }, 5);
+      }
+    }, 0);
+    this.store.dispatch(loadLangs({ langs: DEFAULT_RECOGNITION_LANGUAGES }));
   }
 
+  private configRecognition(
+    recognition: SpeechRecognition,
+    selected: RecognitionSelected
+  ): SpeechRecognition {
+    if (recognition && selected) {
+      recognition.lang = selected.lang?.langCode || 'pl';
+      recognition.interimResults = selected.interimResults;
+      recognition.maxAlternatives = selected.maxAlternatives;
+    }
+    const terms = this.selected?.terms || ['hej', 'cześć', 'test'];
+    const grammar: string = this.selected?.grammar || getGrammar(terms);
+
+    /* Plug the grammar into speech recognition and configure few other properties */
+    let speechRecognitionList = new SpeechGrammarList();
+    speechRecognitionList.addFromString(grammar, 1);
+
+    recognition.grammars = speechRecognitionList;
+    recognition = this.attachRecogListeners(
+      recognition,
+      this.detachRecogListeners
+    );
+
+    this.store.dispatch(setSelectedTerms({ terms }));
+    this.store.dispatch(setSelectedGrammar({ grammar }));
+    this.store.dispatch(loadRecognition({ recognition }));
+
+    return recognition;
+  }
+
+  // Event handling
   attachRecogListeners(
     target: SpeechRecognition,
-    detachListenersFn: (target: SpeechRecognition) => void
+    detachListenersFn: (target: SpeechRecognition) => SpeechRecognition
   ): SpeechRecognition {
-    detachListenersFn(target);
-
-    const newRecognition = target as any;
+    const newRecognition = detachListenersFn(target) as any;
     RECOG_EVENTS.forEach(
-      (event) =>
-        (newRecognition[`on${event}`] = (fnEvent: Event) => {
-          this.nextEvent(fnEvent);
+      (eventType) =>
+        (newRecognition[`on${eventType}`] = (event: Event) => {
+          this.nextEvent(event);
         })
     );
 
@@ -134,11 +169,11 @@ export class RecogService2 {
     this.eventSubject.next(event);
   };
 
-  eventHandleDispatcher(event: RecognitionEvent) {
+  dispatchEventHandle(event: RecognitionEvent) {
     // start > audiostart > (soundstart > speechstart) > results/error/nomatch > (speechend > soundend) > audioend > end
-    console.log('handling...', event);
+    // console.log('handling...', event);
 
-    const processMessage: ProcessMessage = {
+    const processMessage: RecognitionProcessMessage = {
       date: moment().format('yyyy-mm-DD hh:mm:ss'),
       eventType: event.type,
     };
@@ -146,41 +181,31 @@ export class RecogService2 {
     switch (event.type) {
       case SpeechRecognitionEventTypes.start:
         break;
-
       case SpeechRecognitionEventTypes.audiostart:
         break;
-
       case SpeechRecognitionEventTypes.soundstart:
         break;
-
       case SpeechRecognitionEventTypes.speechstart:
         break;
-
       case SpeechRecognitionEventTypes.nomatch:
         break;
-
       case SpeechRecognitionEventTypes.result:
-        const { transcript, confidence } = this.getTopResultFromResults(
+        const { transcript, confidence } = getTopResultFromResults(
           (event as SpeechRecognitionEvent).results
         )[0];
-
         processMessage.topResult = {
           transcript,
           confidence,
         };
-        // tu powinno sie odszukac probe cenzury posrod alternatyw - np dla 'chuj' jest 'c***' wiec mozna zamienic
 
         this.handleResult(transcript);
-        console.log(processMessage);
-
+        // console.log(processMessage);
         break;
       case SpeechRecognitionEventTypes.error:
         processMessage.error = (event as SpeechRecognitionErrorEvent).error;
         break;
-
       case SpeechRecognitionEventTypes.speechend:
         break;
-
       case SpeechRecognitionEventTypes.soundend:
         break;
       case SpeechRecognitionEventTypes.audioend:
@@ -191,13 +216,10 @@ export class RecogService2 {
     }
 
     this.speechStateSubect.next(event.type as SpeechRecognitionEventType);
-    // this.state = event.type as SpeechRecognitionEventType;
-    // console.log(this.state);
-
     this.processMessages.push(processMessage);
+    this.ref.tick(); // update component from here (instead of standard CDR)
 
-    this.ref.tick();
-    console.log(this.processMessages);
+    // console.log(this.processMessages);
   }
 
   private handleEnd = (event: Event) => {
@@ -210,110 +232,13 @@ export class RecogService2 {
     }
   };
 
-  private getTopResultFromResults(
-    results: SpeechRecognitionResultList
-  ): { transcript: string; confidence: string }[] {
-    return Array.from(results)
-      .map((result: SpeechRecognitionResult) => result[0])
-      .map((alternative: SpeechRecognitionAlternative) => ({
-        transcript: alternative.transcript,
-        confidence: alternative.confidence.toString().substr(0, 5),
-      }));
-  }
-
-  private getTopTranscript(results: SpeechRecognitionResultList): string {
-    return Array.from(results)
-      .map((result: SpeechRecognitionResult) => result[0])
-      .map(
-        (alternative: SpeechRecognitionAlternative) => alternative.transcript
-      )
-      .join('');
-  }
-
   private handleResult = (result: string) => {
     this.tempWords = result;
     this.textDisplayed = result;
     this.foundWordConcat();
   };
 
-  ///
-  private init() {
-    this.loadRecognition();
-    this.store.dispatch(loadLangs({ langs: DEFAULT_RECOGNITION_LANGUAGES }));
-  }
-
-  private loadRecognition() {
-    setTimeout(() => {
-      let recognition: SpeechRecognition = new SpeechRecognition();
-
-      if (recognition) {
-        recognition = this.setupRecognition(recognition, this.selected!);
-        this.recognition = recognition;
-      } else {
-        setTimeout(() => {
-          if (recognition) {
-            recognition = this.setupRecognition(recognition, this.selected!);
-            this.recognition = recognition;
-          } else {
-            console.log('No Recognition found.');
-          }
-        }, 5);
-      }
-    }, 0);
-  }
-
-  private setupRecognition(
-    recognition: SpeechRecognition,
-    selected: RecognitionSelected
-  ): SpeechRecognition {
-    if (recognition && selected) {
-      recognition.lang = selected.lang?.langCode || 'pl';
-      recognition.interimResults = selected.interimResults;
-      recognition.maxAlternatives = selected.maxAlternatives;
-    }
-    const terms = this.selected?.terms || ['hej', 'cześć', 'test'];
-    const grammar: string = this.selected?.grammar || this.getGrammar(terms);
-
-    /* Plug the grammar into speech recognition and configure few other properties */
-    let speechRecognitionList = new SpeechGrammarList();
-    speechRecognitionList.addFromString(grammar, 1);
-
-    recognition.grammars = speechRecognitionList;
-    recognition = this.attachRecogListeners(
-      recognition,
-      this.detachRecogListeners
-      // {
-      //   onend: this.handleEnd,
-      //   onresult: this.handleResult,
-      // }
-    );
-
-    this.store.dispatch(setSelectedTerms({ terms }));
-    this.store.dispatch(setSelectedGrammar({ grammar }));
-    this.store.dispatch(loadRecognition({ recognition }));
-
-    return recognition;
-  }
-
-  listen() {
-    if (!this.isListening) {
-      console.log('elo');
-
-      this.isListening = true;
-      this.isStoppedSpeechRecog = false;
-      this.recognition?.start();
-      console.log('Speech recognition started');
-    }
-  }
-
-  stop() {
-    this.isListening = false;
-    this.isStoppedSpeechRecog = true;
-    this.foundWordConcat();
-    this.recognition?.stop();
-    console.log('End speech recognition');
-  }
-
+  // Store communication
   updateSelected(key: string, value: any) {
     switch (key) {
       case 'lang':
@@ -341,8 +266,31 @@ export class RecogService2 {
     });
   }
 
-  foundWordConcat() {
-    this.text = this.text + ' ' + this.tempWords + '.';
+  // UI/Feature functionality
+  listen() {
+    if (!this.isListening) {
+      // console.log('elo');
+
+      this.isListening = true;
+      this.isStoppedSpeechRecog = false;
+      this.recognition?.start();
+      // console.log('Speech recognition started');
+    }
+  }
+
+  stop() {
+    this.isListening = false;
+    this.isStoppedSpeechRecog = true;
+    this.foundWordConcat();
+    this.recognition?.stop();
+    // console.log('End speech recognition');
+  }
+
+  // helpers
+  private foundWordConcat() {
+    this.foundWords = this.foundWords + ' ' + this.tempWords + '.';
+    // console.log(this.foundWords);
+
     this.tempWords = '';
   }
 }

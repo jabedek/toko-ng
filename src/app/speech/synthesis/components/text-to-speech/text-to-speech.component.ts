@@ -1,13 +1,10 @@
-import { SynthesisDefaults } from './../../models/synthesis.model';
-import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { AppState } from 'src/app/app-state/app-state.model';
-import { Subject, Observable } from 'rxjs';
 import {
-  RecommendedVoices,
+  SpeechSynthesisUtteranceEventType,
+  SynthesisDefaults,
   SynthesisSelected,
-} from '../../models/synthesis.model';
-import { DefaultRate } from '../../models/synthesis.constants';
+} from './../../../../shared/models/synthesis.model';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject, Observable } from 'rxjs';
 import { SynthService } from '../../synthesis.service';
 
 @Component({
@@ -26,18 +23,30 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
     voice: undefined,
   };
 
+  state: SpeechSynthesisUtteranceEventType = 'end';
+
   // other
   speakOnChange = true;
   text: string = 'Romeo. Bravo. Tango. Uniform.';
   private destroy$: Subject<void> = new Subject();
 
-  constructor(public synth: SynthService) {
-    this.defaults$ = this.synth.defaults$;
+  constructor(public service: SynthService) {
+    this.defaults$ = this.service.defaults$;
 
     this.subscribeSynthSelected();
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.service.speechStateSubect.subscribe((s) => {
+      console.log(s);
+
+      this.state = s;
+
+      if (s === 'boundary' && this.service.paused) {
+        s = 'pause';
+      }
+    });
+  }
 
   ngOnDestroy() {
     this.destroy$.next();
@@ -64,28 +73,28 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   }
 
   pause(): void {
-    this.synth.pause();
+    this.service.pause();
   }
 
   previewVoice(): void {
-    this.synth.previewVoice(this.text);
+    this.service.previewVoice(this.text);
   }
 
   resume(): void {
-    this.synth.resume();
+    this.service.resume();
   }
 
   speak(): void {
-    this.synth.speak(this.text);
+    this.service.speak(this.text);
   }
 
   stop(): void {
-    this.synth.stop();
+    this.service.stop();
   }
 
   updateSelected(key: 'pitch' | 'rate' | 'voice') {
     const value = this.selected[key];
-    this.synth.updateSelected(key, value);
+    this.service.updateSelected(key, value);
 
     if (this.speakOnChange) {
       this.previewVoice();
@@ -93,7 +102,7 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   }
 
   private subscribeSynthSelected() {
-    this.synth.selected$.subscribe((data) => {
+    this.service.selected$.subscribe((data) => {
       this.selected.voice = data.voice;
       this.selected.rate = data.rate!;
       this.selected.pitch = data.pitch;

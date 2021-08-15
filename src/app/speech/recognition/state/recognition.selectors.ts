@@ -1,4 +1,4 @@
-import { RecognitionState } from './../models/recognition.model';
+import { RecognitionState } from './../../../shared/models/recognition.model';
 import { AppState } from '../../../app-state/app-state.model';
 import { createSelector, createFeatureSelector } from '@ngrx/store';
 

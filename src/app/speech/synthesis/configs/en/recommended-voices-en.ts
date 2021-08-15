@@ -1,4 +1,4 @@
-import { RecommendedVoices } from '../../models/synthesis.model';
+import { RecommendedVoices } from 'src/app/shared/models/synthesis.model';
 
 export const recommendedVoicesEN: RecommendedVoices = Object.create(null);
 recommendedVoicesEN['Alex'] = true;
