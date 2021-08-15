@@ -113,6 +113,7 @@ export class RecogService2 {
     this.store.dispatch(loadLangs({ langs: DEFAULT_RECOGNITION_LANGUAGES }));
   }
 
+  // Get configured SpeechRecognition object.
   private configRecognition(
     recognition: SpeechRecognition,
     selected: RecognitionSelected
@@ -190,12 +191,13 @@ export class RecogService2 {
       case SpeechRecognitionEventTypes.nomatch:
         break;
       case SpeechRecognitionEventTypes.result:
-        const { transcript, confidence } = getTopResultFromResults(
+        const { transcript, confidence, isFinal } = getTopResultFromResults(
           (event as SpeechRecognitionEvent).results
         )[0];
         processMessage.topResult = {
           transcript,
           confidence,
+          isFinal,
         };
 
         this.handleResult(transcript);

@@ -5,7 +5,14 @@ import {
   RecognitionSelected,
   SpeechRecognitionEventType,
 } from './../../../../shared/models/recognition.model';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked,
+} from '@angular/core';
 import { RecogService2 } from '../../recognition-2.service';
 
 @Component({
@@ -14,11 +21,15 @@ import { RecogService2 } from '../../recognition-2.service';
   styleUrls: ['./speech-to-text.component.scss'],
   providers: [],
 })
-export class SpeechToTextComponent implements OnInit, OnDestroy {
+export class SpeechToTextComponent
+  implements OnInit, OnDestroy, AfterViewChecked
+{
+  @ViewChild('messagesEl') messagesEl: ElementRef | undefined;
+
   // Defaults
   langs$: Observable<RecognitionLanguage[]> | undefined;
 
-  state: SpeechRecognitionEventType = 'end';
+  state: SpeechRecognitionEventType | undefined;
 
   // Selected (initial values)
   selected: RecognitionSelected = {
@@ -46,13 +57,26 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.service.speechStateSubect.subscribe((s) => (this.state = s));
-    // this.service.eventSubject.subscribe((d) => {});
+    this.service.speechStateSubect.subscribe((s) => {
+      this.state = s;
+      this.scrollToBottom();
+    });
+  }
+
+  ngAfterViewChecked() {
+    this.scrollToBottom();
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  scrollToBottom(): void {
+    if (this.messagesEl) {
+      this.messagesEl.nativeElement.scrollTop =
+        this.messagesEl.nativeElement.scrollHeight;
+    }
   }
 
   listen() {

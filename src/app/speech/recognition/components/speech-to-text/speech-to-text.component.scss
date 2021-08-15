@@ -142,6 +142,7 @@
 .message-top {
   // border-top: 1px solid grey;
   // border-bottom: 1px solid grey;
+  justify-content: space-between;
 }
 
 .message-bottom {
@@ -160,7 +161,7 @@
 
   &__date {
     padding: 0 0.2rem;
-    width: 200px;
+    // width: 200px;
     flex-shrink: 0;
     > span {
       font-family: "Space Mono", monospace !important;
@@ -169,7 +170,7 @@
 
   &__event-type {
     padding: 0 0.2rem;
-    width: 90px;
+    // width: 90px;
     flex-shrink: 0;
 
     > span {
@@ -185,7 +186,6 @@
     > p,
     span {
       font-family: "Space Mono", monospace !important;
-      color: green;
     }
   }
 
@@ -198,6 +198,10 @@
       color: red;
     }
   }
+}
+
+.final-result {
+  color: green;
 }
 
 .state {

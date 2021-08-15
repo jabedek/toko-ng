@@ -29,6 +29,7 @@ export interface RecognitionProcessMessage {
   topResult?: {
     transcript?: string;
     confidence?: string;
+    isFinal?: boolean;
   };
   error?: string;
 }

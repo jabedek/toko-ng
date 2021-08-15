@@ -118,4 +118,6 @@
   </div>
   <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
-<p>current event: {{ state }}</p>
+<p>
+  <span> current event: {{ state ? state : "" }}</span>
+</p>

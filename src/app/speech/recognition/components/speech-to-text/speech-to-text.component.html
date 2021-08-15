@@ -68,23 +68,31 @@
   <div class="side-panel">
     <section class="section section--process-view">
       <label class="label"> Process View </label>
-      <ul class="process-messages">
+      <ul class="process-messages" #messagesEl>
         <li *ngFor="let message of service.processMessages" class="message">
           <div class="message-top">
+            <section class="message__event-type">
+              <span>
+                {{ message.eventType }}
+
+                <ng-container *ngIf="message.eventType === 'result'">
+                  {{ message.topResult?.isFinal ? "(final)" : "(interim)" }}
+                </ng-container>
+              </span>
+            </section>
             <section class="message__date">
               <span>
                 {{ message.date }}
               </span>
             </section>
-
-            <section class="message__event-type">
-              <span>
-                {{ message.eventType }}
-              </span>
-            </section>
           </div>
           <div class="message-bottom">
-            <section class="message__result" *ngIf="message.topResult">
+            <section
+              class="message__result"
+              *ngIf="message.topResult"
+              [ngClass]="{ 'final-result': message.topResult.isFinal }"
+            >
+              isFinal{{ message.topResult.isFinal }}
               <p class="message__transcript">
                 [wykryto]: "{{ message.topResult.transcript }}"
               </p>
@@ -96,7 +104,7 @@
             <section class="message__error" *ngIf="message.error">
               <ng-container [ngSwitch]="message.error">
                 <span class="message__error-desc" *ngSwitchCase="'no-speech'">
-                  [no-speech] Nie wykryto mowy od strony użytkownika (nikt nic
+                  [no-speech] Nie wykryto mowy ze strony użytkownika (nikt nic
                   nie mówi?).
                 </span>
                 <span
@@ -124,5 +132,6 @@
   </div>
   <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
-
-<p>current event: {{ state }}</p>
+<p>
+  <span> current event: {{ state ? state : "" }}</span>
+</p>

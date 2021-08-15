@@ -1,20 +1,32 @@
 // tu powinno sie odszukac probe cenzury posrod alternatyw - np dla 'chuj' jest 'c***' wiec mozna zamienic
 export function getTopResultFromResults(
   results: SpeechRecognitionResultList
-): { transcript: string; confidence: string }[] {
-  return Array.from(results)
-    .map((result: SpeechRecognitionResult) => result[0])
-    .map((alternative: SpeechRecognitionAlternative) => {
-      let transcript = alternative.transcript;
-      if (transcript.includes('c***')) {
-        transcript = 'chuj';
-      }
+): { transcript: string; confidence: string; isFinal: boolean }[] {
+  console.log(results);
 
-      return {
-        transcript,
-        confidence: alternative.confidence.toString().substr(0, 5),
-      };
-    });
+  return Array.from(results)
+    .map((result: SpeechRecognitionResult) => {
+      if (result.isFinal) console.log(result.isFinal);
+
+      return { alternative: result[0], isFinal: result.isFinal };
+    })
+    .map(
+      (result: {
+        alternative: SpeechRecognitionAlternative;
+        isFinal: boolean;
+      }) => {
+        let transcript = result.alternative.transcript;
+        if (transcript.includes('c***')) {
+          transcript = 'chuj';
+        }
+
+        return {
+          transcript,
+          confidence: result.alternative.confidence.toString().substr(0, 5),
+          isFinal: result.isFinal,
+        };
+      }
+    );
 }
 
 export function getTopTranscript(results: SpeechRecognitionResultList): string {

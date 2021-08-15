@@ -23,7 +23,7 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
     voice: undefined,
   };
 
-  state: SpeechSynthesisUtteranceEventType = 'end';
+  state: SpeechSynthesisUtteranceEventType | undefined;
 
   // other
   speakOnChange = true;
