@@ -50,10 +50,14 @@ textarea {
 }
 
 input[type="range"] {
-  width: 180px;
+  width: 150px;
 }
 
 input[type="textarea"],
 input[type="select"] {
   width: 360px;
+}
+
+textarea {
+  min-height: 42.4px;
 }

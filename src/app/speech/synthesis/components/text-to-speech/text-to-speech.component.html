@@ -1,116 +1,121 @@
 <!-- <ng-container *ngIf="voices$ | async as voices">
   <ng-container *ngIf="recommendedVoices$ | async as recommendedVoices">
     <ng-container *ngIf="rates$ | async as rates"> -->
-<div *ngIf="defaults$ | async as defaults" class="form">
-  <div
-    class="field"
-    *ngIf="defaults.voices?.length && defaults.recommendedVoices"
-  >
-    <label for="voice-control" class="field__label"> Voice: </label>
-    <div class="field__content">
-      <select
-        id="voice-control"
-        name="voice"
-        [(ngModel)]="selected.voice"
-        (change)="updateSelected('voice')"
-        class="field__control field__control--select"
+<div class="text-to-speech-container">
+  <div *ngIf="defaults$ | async as defaults" class="form">
+    <div
+      class="field"
+      *ngIf="defaults.voices?.length && defaults.recommendedVoices"
+    >
+      <label for="voice-control" class="field__label"> Voice </label>
+      <div class="field__content">
+        <select
+          id="voice-control"
+          name="voice"
+          [(ngModel)]="selected.voice"
+          (change)="updateSelected('voice')"
+          class="field__control field__control--select"
+        >
+          <option value="">- Select a voice -</option>
+          <option *ngFor="let voice of defaults.voices" [ngValue]="voice">
+            {{ voice.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field field--double">
+      <section class="field__section">
+        <label class="field__label"> Pitch </label>
+        <input
+          type="range"
+          min="0.25"
+          max="2.0"
+          step="0.25"
+          class="field__control"
+          (change)="updateSelected('pitch')"
+          [(ngModel)]="selected.pitch"
+        />
+
+        <label class="field__label field__label--value">
+          {{ selected.pitch }}
+        </label>
+      </section>
+
+      <section class="field__section">
+        <label class="field__label"> Rate </label>
+        <input
+          type="range"
+          [attr.min]="defaults.rates[0]"
+          [attr.max]="defaults.rates[defaults.rates.length - 1]"
+          class="field__control"
+          step="0.25"
+          (change)="updateSelected('rate')"
+          [(ngModel)]="selected.rate"
+        />
+        <label class="field__label field__label--value">
+          {{ selected.rate }}
+        </label>
+      </section>
+    </div>
+
+    <div class="field">
+      <section class="field__section">
+        <label for="text-control" class="field__label"> Text </label>
+        <div class="field__content">
+          <textarea
+            #textarea
+            id="text-control"
+            name="text"
+            [(ngModel)]="text"
+            (keyup)="handleKey($event)"
+            class="field__control field__control--textarea"
+          ></textarea>
+        </div>
+      </section>
+
+      <section class="field__section">
+        <div class="checkbox-input">
+          <div class="checkbox-wrapper">
+            <input
+              type="checkbox"
+              [(ngModel)]="speakOnChange"
+              class="field__control field__control--checkbox"
+            />
+          </div>
+          <label class="field__label">
+            Start new speech on any value change in text input
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="speak()" class="action__button">
+        Speak text
+      </button>
+
+      <button
+        type="button"
+        (click)="stop()"
+        class="action__button action__button--secondary"
       >
-        <option value="">- Select a voice -</option>
-        <option *ngFor="let voice of defaults.voices" [ngValue]="voice">
-          {{ voice.name }}
-        </option>
-      </select>
+        Stop
+      </button>
+      <button
+        type="button"
+        (click)="pause()"
+        class="action__button action__button--secondary"
+      >
+        Pause
+      </button>
+      <button
+        type="button"
+        (click)="resume()"
+        class="action__button action__button--secondary"
+      >
+        Resume
+      </button>
     </div>
-  </div>
-
-  <div class="field field--100">
-    <label for="text-control" class="field__label"> Text: </label>
-    <div class="field__content">
-      <textarea
-        #textarea
-        id="text-control"
-        name="text"
-        [(ngModel)]="text"
-        (keyup)="handleKey($event)"
-        class="field__control field__control--textarea"
-      ></textarea>
-    </div>
-  </div>
-
-  <div class="field field--double">
-    <section class="section">
-      <label class="field__label"> Pitch </label>
-      <input
-        type="range"
-        min="0.25"
-        max="2.0"
-        step="0.25"
-        class="field__control"
-        (change)="updateSelected('pitch')"
-        [(ngModel)]="selected.pitch"
-      />
-
-      <label class="field__label field__label--value">
-        {{ selected.pitch }}
-      </label>
-    </section>
-
-    <section class="section">
-      <label class="field__label"> Rate </label>
-      <input
-        type="range"
-        [attr.min]="defaults.rates[0]"
-        [attr.max]="defaults.rates[defaults.rates.length - 1]"
-        class="field__control"
-        step="0.25"
-        (change)="updateSelected('rate')"
-        [(ngModel)]="selected.rate"
-      />
-      <label class="field__label field__label--value">
-        {{ selected.rate }}
-      </label>
-    </section>
-  </div>
-
-  <div class="field">
-    <div class="checkbox-wrapper">
-      <label class="field__label"> Speak on any value change </label>
-      <input
-        type="checkbox"
-        [(ngModel)]="speakOnChange"
-        class="field__control field__control--checkbox"
-      />
-    </div>
-  </div>
-
-  <div class="form-actions">
-    <button type="button" (click)="speak()" class="action__button">
-      Speak text
-    </button>
-
-    <button
-      type="button"
-      (click)="stop()"
-      class="action__button action__button--secondary"
-    >
-      Stop
-    </button>
-    <button
-      type="button"
-      (click)="pause()"
-      class="action__button action__button--secondary"
-    >
-      Pause
-    </button>
-    <button
-      type="button"
-      (click)="resume()"
-      class="action__button action__button--secondary"
-    >
-      Resume
-    </button>
   </div>
 </div>
-<!-- </ng-container>
-  </ng-container>
-</ng-container> -->

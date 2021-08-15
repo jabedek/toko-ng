@@ -1,64 +1,112 @@
-<ng-container *ngIf="langs$ | async as langs">
-  <div class="form-field">
-    <label class="form-field__label"> Language: </label>
-    <select
-      [(ngModel)]="selected.lang"
-      (change)="updateSelected('lang')"
-      class="form-field__control"
-    >
-      <option value="">- Select a language -</option>
-      <option *ngFor="let lang of langs" [ngValue]="lang">
-        {{ lang.name }} {{ lang.langCode }}
-      </option>
-    </select>
-  </div>
+<div class="speech-to-text-container">
+  <div *ngIf="langs$ | async as langs" class="form">
+    <div class="field">
+      <label class="field__label"> Language: </label>
+      <select
+        [(ngModel)]="selected.lang"
+        (change)="updateSelected('lang')"
+        class="field__control"
+      >
+        <option value="">- Select a language -</option>
+        <option *ngFor="let lang of langs" [ngValue]="lang">
+          {{ lang.name }} {{ lang.langCode }}
+        </option>
+      </select>
+    </div>
 
-  <div class="form-field">
-    <label class="form-field__label">interimResults</label>
-    <section>
-      Yes
+    <div class="field">
+      <label class="field__label">interimResults</label>
+      <section>
+        Yes
+        <input
+          type="radio"
+          [(ngModel)]="selected.interimResults"
+          (change)="updateSelected('interimResults')"
+          class="field__control"
+          value="true"
+        />
+      </section>
+      <section>
+        No
+        <input
+          type="radio"
+          [(ngModel)]="selected.interimResults"
+          (change)="updateSelected('interimResults')"
+          class="field__control"
+          value="false"
+        />
+      </section>
+    </div>
+
+    <div class="field">
+      <label class="field__label">Terms to focus on</label>
       <input
-        type="radio"
-        [(ngModel)]="selected.interimResults"
-        (change)="updateSelected('interimResults')"
-        class="form-field__control"
-        value="true"
+        [(ngModel)]="termsDisplayed"
+        (keydown)="updateSelected('terms')"
+        class="field__control"
       />
-    </section>
-    <section>
-      No
-      <input
-        type="radio"
-        [(ngModel)]="selected.interimResults"
-        (change)="updateSelected('interimResults')"
-        class="form-field__control"
-        value="false"
-      />
-    </section>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="listen()" class="form-actions__button">
+        Listen
+      </button>
+
+      <button
+        type="button"
+        (click)="stop()"
+        class="form-actions__button form-actions__button--secondary"
+      >
+        Stop listening
+      </button>
+    </div>
   </div>
 
-  <div class="form-field">
-    <label class="form-field__label">Terms to focus on</label>
-    <input
-      [(ngModel)]="termsDisplayed"
-      (keydown)="updateSelected('terms')"
-      class="form-field__control"
-    />
+  <div class="side-panel">
+    <section class="section section--process-view">
+      <label class="label"> Process View </label>
+      <ul class="process-messages">
+        <li *ngFor="let message of recog.processMessages" class="message">
+          <section class="message__date">
+            <span>
+              {{ message.date }}
+            </span>
+          </section>
+
+          <section class="message__event-type">
+            <span>
+              {{ message.eventType }}
+            </span>
+          </section>
+
+          <section class="message__result" *ngIf="message.topResult">
+            <span class="message__transcript">{{
+              message.topResult.transcript
+            }}</span>
+            <span class="message__confidence">{{
+              message.topResult.confidence
+            }}</span>
+          </section>
+
+          <section class="message__error" *ngIf="message.error">
+            <ng-container [ngSwitch]="message.error">
+              <span class="message__error-desc" *ngSwitchCase="'no-speech'"
+                >[no-speech] Nie wykryto mowy od strony użytkownika (nikt nic
+                nie mówi?)</span
+              >
+              <span class="message__error-desc" *ngSwitchDefault>
+                [{{ message.error }}] Błąd
+              </span>
+            </ng-container>
+          </section>
+        </li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <label class="label"> Found words:{{ recog.textDisplayed }} </label>
+    </section>
   </div>
-</ng-container>
-
-<div class="form-actions">
-  <button type="button" (click)="listen()" class="form-actions__button">
-    Listen
-  </button>
-
-  <button
-    type="button"
-    (click)="stop()"
-    class="form-actions__button form-actions__button--secondary"
-  >
-    Stop listening
-  </button>
+  <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
-
-Words:{{ recog.textDisplayed }}
+state {{ state }}

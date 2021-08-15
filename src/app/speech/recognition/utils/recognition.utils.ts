@@ -1,133 +1,111 @@
 import { SpecificHandlers } from './../models/recognition.model';
-import { RECOG_EVENTS } from '../models/recognition.constants';
 
-/* Set up terms and grammar
-[line]: #JSGF V1.0; - states the format and version used. This always needs to be included first.
-[line]: grammar terms; - indicates a type of term that we want to recognise.
-[line]: public <term> - public declares that it is a public rule, the string in angle brackets defines the recognised name for this term (term).
-[line]: ' + terms.join(' | ') + ' - alternative values that will be recognised and accepted as appropriate values for the term.
-*/
-export function getGrammar(termsList: string[]): string {
-  const terms = termsList || ['pies', 'kot', 'jeż'];
-  const grammar =
-    '#JSGF V1.0; grammar terms; public <terms> = ' + terms.join(' | ') + ' ;';
+// export function attachListenersRecog(
+//   target: SpeechRecognition,
+//   logAllEvents = false,
+//   detachListenersFn: (target: SpeechRecognition) => void,
+//   specificHandlers?: SpecificHandlers
+// ): SpeechRecognition {
+//   if (detachListenersFn) {
+//     detachListenersFn(target);
+//   }
 
-  return grammar;
-}
+//   const newRecognition = target as any;
 
-export function attachListenersRecog(
-  target: SpeechRecognition,
-  logAllEvents = false,
-  detachListenersFn: (target: SpeechRecognition) => void,
-  specificHandlers?: SpecificHandlers
-): SpeechRecognition {
-  if (detachListenersFn) {
-    detachListenersFn(target);
-  }
+//   newRecognition.onaudioend = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[audioend]:`, event);
+//     }
+//   };
 
-  const newRecognition = target as any;
+//   newRecognition.onaudiostart = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[audiostart]:`, event);
+//     }
+//   };
 
-  newRecognition.onaudioend = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[audioend]:`, event);
-    }
-  };
+//   newRecognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[error]:`, event);
+//     }
+//   };
 
-  newRecognition.onaudiostart = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[audiostart]:`, event);
-    }
-  };
+//   newRecognition.onend = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[end]:`, event);
+//     }
+//   };
 
-  newRecognition.onerror = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[error]:`, event);
-    }
-  };
+//   newRecognition.onnomatch = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[nomatch]:`, event);
+//     }
+//   };
 
-  newRecognition.onend = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[end]:`, event);
-    }
-  };
+//   newRecognition.onresult = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[result]:`, event);
+//       const transcript = Array.from(event.results)
+//         .map((result: any) => result[0])
+//         .map((result) => result.transcript)
+//         .join('');
+//       console.log(transcript);
+//     }
+//   };
 
-  newRecognition.onnomatch = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[nomatch]:`, event);
-    }
-  };
+//   newRecognition.onsoundend = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[soundend]:`, event);
+//     }
+//   };
 
-  newRecognition.onresult = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[result]:`, event);
-      const transcript = Array.from(event.results)
-        .map((result: any) => result[0])
-        .map((result) => result.transcript)
-        .join('');
-      console.log(transcript);
-    }
-  };
+//   newRecognition.onsoundstart = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[soundstart]:`, event);
+//     }
+//   };
 
-  newRecognition.onsoundend = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[soundend]:`, event);
-    }
-  };
+//   newRecognition.onspeechend = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[speechend]:`, event);
+//     }
+//   };
 
-  newRecognition.onsoundstart = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[soundstart]:`, event);
-    }
-  };
+//   newRecognition.onspeechstart = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[speechstart]:`, event);
+//     }
+//   };
 
-  newRecognition.onspeechend = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[speechend]:`, event);
-    }
-  };
+//   newRecognition.onstart = (event: SpeechRecognitionEvent) => {
+//     if (logAllEvents) {
+//       console.log(`[start]:`, event);
+//     }
+//   };
 
-  newRecognition.onspeechstart = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[speechstart]:`, event);
-    }
-  };
+//   for (let key in specificHandlers) {
+//     if (specificHandlers[key]) {
+//       newRecognition[key] = specificHandlers[key];
+//     }
+//   }
 
-  newRecognition.onstart = (event: any) => {
-    if (logAllEvents) {
-      console.log(`[start]:`, event);
-    }
-  };
+//   return newRecognition;
+// }
 
-  for (let key in specificHandlers) {
-    if (specificHandlers[key]) {
-      newRecognition[key] = specificHandlers[key];
-    }
-  }
-
-  return newRecognition;
-}
-
-export function detachListenersRecog(
-  target: SpeechRecognition
-): SpeechRecognition {
-  const newRecognition = target as any;
-  newRecognition.onaudioend = undefined;
-  newRecognition.onaudiostart = undefined;
-  newRecognition.onerror = undefined;
-  newRecognition.onend = undefined;
-  newRecognition.onnomatch = undefined;
-  newRecognition.onresult = undefined;
-  newRecognition.onsoundend = undefined;
-  newRecognition.onsoundstart = undefined;
-  newRecognition.onspeechend = undefined;
-  newRecognition.onspeechstart = undefined;
-  newRecognition.onstart = undefined;
-  return newRecognition;
-}
-
-// export function wordConcat(text: string, tempWords: string) {
-//   const result = text + tempWords + '.';
-
-//   console.log(result);
-//   return result;
+// export function detachListenersRecog(
+//   target: SpeechRecognition
+// ): SpeechRecognition {
+//   const newRecognition = target as any;
+//   newRecognition.onaudioend = undefined;
+//   newRecognition.onaudiostart = undefined;
+//   newRecognition.onerror = undefined;
+//   newRecognition.onend = undefined;
+//   newRecognition.onnomatch = undefined;
+//   newRecognition.onresult = undefined;
+//   newRecognition.onsoundend = undefined;
+//   newRecognition.onsoundstart = undefined;
+//   newRecognition.onspeechend = undefined;
+//   newRecognition.onspeechstart = undefined;
+//   newRecognition.onstart = undefined;
+//   return newRecognition;
 // }

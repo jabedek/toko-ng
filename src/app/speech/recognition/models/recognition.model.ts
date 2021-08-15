@@ -36,3 +36,59 @@ export type ListenersAttacherFn = (
 export interface SpecificHandlers {
   [eventType: string]: (event: any) => any | void;
 }
+
+export type RecognitionEvent =
+  | Event
+  | SpeechRecognitionEvent
+  | SpeechRecognitionErrorEvent;
+
+export enum SpeechRecognitionEventTypes {
+  audioend = 'audioend',
+  audiostart = 'audiostart',
+  end = 'end',
+  soundend = 'soundend',
+  soundstart = 'soundstart',
+  speechend = 'speechend',
+  speechstart = 'speechstart',
+  start = 'start',
+  error = 'error',
+  nomatch = 'nomatch',
+  result = 'result',
+}
+
+export type SpeechRecognitionEventType =
+  | 'audioend'
+  | 'audiostart'
+  | 'end'
+  | 'soundend'
+  | 'soundstart'
+  | 'speechend'
+  | 'speechstart'
+  | 'start'
+  | 'error'
+  | 'nomatch'
+  | 'result';
+
+interface SpeechRecognitionEventMap {
+  audioend: Event;
+  audiostart: Event;
+  end: Event;
+  error: SpeechRecognitionErrorEvent;
+  nomatch: SpeechRecognitionEvent;
+  result: SpeechRecognitionEvent;
+  soundend: Event;
+  soundstart: Event;
+  speechend: Event;
+  speechstart: Event;
+  start: Event;
+}
+
+export interface ProcessMessage {
+  date: string | Date;
+  eventType: string;
+  topResult?: {
+    transcript?: string;
+    confidence?: string;
+  };
+  error?: string;
+}

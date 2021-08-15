@@ -3,6 +3,7 @@ import { Subject, Observable } from 'rxjs';
 import {
   RecognitionLanguage,
   RecognitionSelected,
+  SpeechRecognitionEventType,
 } from './../../models/recognition.model';
 import { RecogService } from './../../recognition.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -24,6 +25,8 @@ declare var webkitSpeechRecognition: any;
 export class SpeechToTextComponent implements OnInit, OnDestroy {
   // Defaults
   langs$: Observable<RecognitionLanguage[]> | undefined;
+
+  state: SpeechRecognitionEventType = 'end';
 
   // Selected
   selected: RecognitionSelected = {
@@ -50,7 +53,10 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.recog.speechStateSubect.subscribe((s) => (this.state = s));
+    this.recog.eventSubject.subscribe((d) => {});
+  }
 
   ngOnDestroy() {
     this.destroy$.next();
@@ -68,13 +74,13 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
   updateSelected(
     key: 'lang' | 'interimResults' | 'terms' | 'grammar' | 'continuous'
   ) {
-    let value: any;
-    console.log('textToWords');
-    if (key === 'terms') {
-      value = this.textToWords(this.termsDisplayed);
-    } else {
-      value = this.selected[key];
-    }
+    console.log('speech to text2');
+
+    let value: any =
+      key === 'terms'
+        ? this.textToWords(this.termsDisplayed)
+        : this.selected[key];
+
     this.recog.updateSelected(key, value);
   }
 
@@ -86,7 +92,7 @@ export class SpeechToTextComponent implements OnInit, OnDestroy {
   }
 
   textToWords(text: string) {
-    console.log('textToWords');
+    console.log('speech to text');
 
     const whitespacesTest = /\s*/gm;
     const specialSymbolsTest = /[\.]*[\-]*[\+]*[\/]*/gm;
