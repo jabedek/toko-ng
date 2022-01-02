@@ -1,85 +1,56 @@
-import { NextEventFn } from './../../shared/models/shared.models';
 /**
  * I. Speech Synthesis !== Speech Utterance (consider different roles and events)
  * II. Synthesis events are differently attached - not like Recognition events.
  * * Here, every time synthesis starts a new set of event listeners are reattached
  */
 
-import { takeUntil } from 'rxjs/operators';
+/**
+ * Interfaces were copied from lib.dom.d.ts
+ */
+import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { ApplicationRef, Injectable, OnDestroy, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
 import {
   selectSynthesisSelected,
-  selectSynthesisDefaults,
   selectSynthesisSpeaking,
-  selectDefaultRates,
-  selectDefaultRecommendedVoices,
-  selectDefaultVoices,
 } from './state/synthesis.selectors';
-import { Observable, Subject } from 'rxjs';
-import { ApplicationRef, Injectable, OnDestroy } from '@angular/core';
-import { Store } from '@ngrx/store';
 import { AppState } from '../../app-state/app-state.model';
-import { recommendedVoicesEN } from './configs/en/recommended-voices-en';
-import {
-  DEFAULT_SYNTHESIS_RATES,
-  UTTERANCE_ONLY_EVENTS,
-} from './synthesis.constants';
 import {
   UtteranceEventsSubscriptions,
   RecommendedVoices,
-  SynthesisDefaults,
   SynthesisSelected,
   SynthesisSpeaking,
-  DefaultRate,
   SynthesisEvent,
-  SpeechSynthesisUtteranceEventTypes,
   SpeechSynthesisUtteranceEventType,
-  UtteranceListenerAttacher,
-  UtteranceListenerDetacher,
   SynthesisProcessMessage,
 } from './../../shared/models/synthesis.model';
-import {
-  loadRecommendedVoices,
-  loadSynthesisRates,
-  loadVoices,
-  setSelectedPitch,
-  setSelectedRate,
-  setSelectedVoice,
-  setSpeaking,
-  setSpeakingProcess,
-} from './state/synthesis.actions';
-import {
-  readBoundaryEvent,
-  attachSynthUtteranceListeners,
-  detachSynthUtteranceListeners,
-} from './utils/speech-synthesis-events.utils';
-import * as moment from 'moment';
+import { LoaderService } from './loader.service';
+import { EventsHandlerService } from './events-handler.service';
+import { DEFAULT_TEXT } from './synthesis.constants';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SynthService implements OnDestroy {
-  eventSubject: Subject<SynthesisEvent> = new Subject();
-  speechStateSubect: Subject<SpeechSynthesisUtteranceEventType> = new Subject();
-
+export class SynthService implements OnInit {
+  voices: SpeechSynthesisVoice[] = [];
+  synth: SpeechSynthesis | undefined = undefined;
+  recommendedVoices: RecommendedVoices = {};
+  speechStateSub: Subject<SpeechSynthesisUtteranceEventType> = new Subject();
   processMessages: SynthesisProcessMessage[] = [];
 
-  // Defaults
-  defaults$: Observable<SynthesisDefaults> = this.store.select(
-    selectSynthesisDefaults
-  );
-  defaults: SynthesisDefaults | undefined;
-  rates$: Observable<DefaultRate[]> = this.store.select(selectDefaultRates);
-  recommendedVoices$: Observable<RecommendedVoices> = this.store.select(
-    selectDefaultRecommendedVoices
-  );
-  voices$: Observable<SpeechSynthesisVoice[]> =
-    this.store.select(selectDefaultVoices);
+  synthesisLoadedSub: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
 
-  // Selected
-  selected$: Observable<SynthesisSelected> = this.store.select(
-    selectSynthesisSelected
-  );
-  selected: SynthesisSelected | undefined;
+  // // Selected
+  // selected$: Observable<SynthesisSelected> = this.store.select(
+  //   selectSynthesisSelected
+  // );
+
+  // selected: SynthesisSelected = {
+  //   voice: undefined,
+  //   rate: 1,
+  //   pitch: 1,
+  //   volume: 1,
+  // };
 
   // Speaking
   speaking$: Observable<SynthesisSpeaking> = this.store.select(
@@ -90,143 +61,60 @@ export class SynthService implements OnDestroy {
   paused = false;
   utterance: SpeechSynthesisUtterance | undefined = undefined;
 
-  // other
-  private eventsSubs: UtteranceEventsSubscriptions[] = [];
-  private destroy$: Subject<void> = new Subject();
+  constructor(
+    public store: Store<AppState>,
+    public ref: ApplicationRef,
+    private loader: LoaderService,
+    private eventsHandler: EventsHandlerService
+  ) {
+    this.init();
+  }
 
-  constructor(public store: Store<AppState>, public ref: ApplicationRef) {
-    this.subscribeToStore();
+  ngOnInit(): void {}
 
-    this.eventSubject.subscribe((event: SynthesisEvent) => {
-      this.dispatchEventHandle(event);
-    });
-
+  private init() {
     setTimeout(() => {
-      this.initSynthesis();
+      const { synth, voices } = this.loader.getSynthAndVoices();
+      this.synth = synth;
+      this.voices = voices;
+      this.utterance = this.eventsHandler.getUtteranceWithHandlers();
+      this.subscribeEventsStream();
 
-      const utterance = this.createUtteranceWithEventListenersOnly();
-      if (utterance) {
-        this.utterance = utterance;
-      }
-      console.log(speechSynthesis, this.utterance);
+      this.synthesisLoadedSub.next(true);
     }, 0);
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  // Setup & config
-  private initSynthesis(): void {
-    const POLISH = true;
-    const voiceName0 = 'Microsoft Adam - Polish (Poland)';
-
-    let voice: SpeechSynthesisVoice;
-    let voices: SpeechSynthesisVoice[] = [];
-
-    this.store.dispatch(loadSynthesisRates({ rates: DEFAULT_SYNTHESIS_RATES }));
-    this.store.dispatch(
-      loadRecommendedVoices({ recommendedVoices: recommendedVoicesEN })
-    );
-
-    setTimeout(() => {
-      console.log('init 1');
-
-      voices = speechSynthesis.getVoices();
-      console.log(voices);
-      this.store.dispatch(loadVoices({ voices }));
-      this.store.dispatch(setSelectedVoice({ voice: voices[0] || undefined }));
-      voice = voices.find((v) => v.name === voiceName0)!;
-
-      if (!voices.length) {
-        console.log('init 2');
-        speechSynthesis.addEventListener('voiceschanged', (event) => {
-          console.log('voiceschanged', event);
-
-          voices = speechSynthesis.getVoices();
-          voice = voices.find((v) => v.name === voiceName0)!;
-
-          this.store.dispatch(loadVoices({ voices }));
-          this.store.dispatch(
-            setSelectedVoice({ voice: POLISH ? voice : voices[0] || undefined })
-          );
-        });
-      }
-    }, 0);
-  }
-
-  // Event handling
-  nextEvent = (event: SynthesisEvent) => {
-    this.eventSubject.next(event);
-  };
-
-  dispatchEventHandle(event: SynthesisEvent) {
-    console.log('handling...', event.type, event);
-
-    const processMessage: SynthesisProcessMessage = {
-      date: moment().format('yyyy-mm-DD HH:mm:ss'),
-      eventType: event.type,
+  getDefaultsParams(): SynthesisSelected {
+    return {
+      rate: 1.5,
+      pitch: 1.25,
+      volume: 1,
+      voice:
+        this.voices.find(
+          (v) => v.name === 'Microsoft Adam - Polish (Poland)'
+        ) ||
+        this.voices[0] ||
+        undefined,
     };
-    switch (event.type) {
-      case SpeechSynthesisUtteranceEventTypes.start:
-        this.paused = false;
-        break;
-      case SpeechSynthesisUtteranceEventTypes.boundary:
-        processMessage.name = (event as SpeechSynthesisEvent).name;
-        readBoundaryEvent(event as SpeechSynthesisEvent);
-        break;
-      case SpeechSynthesisUtteranceEventTypes.error:
-        break;
-      case SpeechSynthesisUtteranceEventTypes.mark:
-        break;
-      case SpeechSynthesisUtteranceEventTypes.pause:
-        this.paused = true;
-        break;
-      case SpeechSynthesisUtteranceEventTypes.resume:
-        this.paused = false;
-        break;
-      case SpeechSynthesisUtteranceEventTypes.end:
-        detachSynthUtteranceListeners(this.utterance!);
-        break;
-    }
-
-    this.paused
-      ? this.speechStateSubect.next('pause')
-      : this.speechStateSubect.next(
-          event.type as SpeechSynthesisUtteranceEventType
-        );
-
-    this.processMessages.push(processMessage);
-    this.ref.tick(); // update component from here (instead of standard CDR)
   }
 
-  // Store communication
-  updateSelected(key: string, value: any) {
-    switch (key) {
-      case 'pitch':
-        this.store.dispatch(setSelectedPitch({ pitch: value }));
-        break;
-      case 'rate':
-        this.store.dispatch(setSelectedRate({ rate: value }));
-        break;
-      case 'voice':
-        this.store.dispatch(setSelectedVoice({ voice: value }));
-        break;
-    }
-  }
+  private subscribeEventsStream(): void {
+    this.eventsHandler.events$.subscribe((event: SynthesisEvent) => {
+      const { paused, utterance } = this.eventsHandler.resolveEvent(
+        event,
+        this.utterance,
+        this.paused
+      );
+      this.utterance = utterance;
+      this.paused = paused;
 
-  private subscribeToStore(): void {
-    this.defaults$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
-      this.defaults = d;
-    });
+      paused
+        ? this.speechStateSub.next('pause')
+        : this.speechStateSub.next(
+            event.type as SpeechSynthesisUtteranceEventType
+          );
 
-    this.selected$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
-      this.selected = d;
-    });
-
-    this.speaking$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
-      this.speaking = d;
+      this.ref.tick(); // update component from here (instead of standard CDR)
     });
   }
 
@@ -236,80 +124,71 @@ export class SynthService implements OnDestroy {
    */
   pause(): void {
     this.paused = true;
-    speechSynthesis.pause();
-    this.store.dispatch(
-      setSpeakingProcess({
-        process: {
-          isRunning: true,
-          isPausedWhileUttering: true,
-          isMakingSoundNow: false,
-        },
-      })
-    );
+    this.synth?.pause();
   }
 
-  previewVoice(text?: string): void {
-    if (!this.selected!.voice) {
-      console.warn('Expected a voice, but none was selected.');
-      return;
+  previewVoice(text: string, params: SynthesisSelected): void {
+    this.stop();
+
+    if (!text.length) {
+      console.warn('No text input has been provided. Using default text.');
+      text = DEFAULT_TEXT;
     }
 
-    const demoText = 'Best wishes and warmest regards.';
+    if (!params.voice) {
+      console.warn(
+        'Expected a voice, but none was selected. Selecting first voice from the list.'
+      );
+    }
 
-    this.stop();
     this.synthesizeSpeechFromText(
-      this.selected!.voice,
-      this.selected!.rate || 1,
-      this.selected!.pitch || 1,
-      text || demoText
+      params.voice || this.voices[0],
+      params.rate || 1,
+      params.pitch || 1,
+      text
     );
   }
 
   resume() {
     this.paused = false;
-    speechSynthesis.resume();
-    this.store.dispatch(
-      setSpeakingProcess({
-        process: {
-          isRunning: true,
-          isPausedWhileUttering: false,
-          isMakingSoundNow: true,
-        },
-      })
-    );
+    this.synth?.resume();
+    // this.store.dispatch(
+    //   setSpeakingProcess({
+    //     process: {
+    //       isRunning: true,
+    //       isPausedWhileUttering: false,
+    //       isMakingSoundNow: true,
+    //     },
+    //   })
+    // );
   }
 
   /**
    * Synthesizes speech from the text for the currently-selected voice
    */
-  speak(text: string): void {
+  speak(text: string, params: SynthesisSelected): void {
     setTimeout(() => {
       this.paused = false;
-      if (!text.length || !this.selected?.voice) {
-        console.log('here1');
 
-        return;
-      } else {
-        console.log('here2');
-        this.stop();
+      if (!text.length) {
+        console.warn('No text input has been provided. Using default text.');
+        text = DEFAULT_TEXT;
+      }
 
-        this.store.dispatch(
-          setSpeakingProcess({
-            process: {
-              isRunning: true,
-              isPausedWhileUttering: false,
-              isMakingSoundNow: true,
-            },
-          })
-        );
-
-        this.synthesizeSpeechFromText(
-          this.selected.voice,
-          this.selected.rate || 1,
-          this.selected.pitch || 1,
-          text
+      if (!params.voice) {
+        console.warn(
+          'Expected a voice, but none was selected. Selecting first voice from the list.'
         );
       }
+
+      this.stop();
+
+      this.synthesizeSpeechFromText(
+        params.voice || this.voices[0],
+        params.rate || 1,
+        params.pitch || 1,
+        text
+      );
     }, 0);
   }
 
@@ -317,28 +196,7 @@ export class SynthService implements OnDestroy {
    * Stops any current speech synthesis and clears current speaking info.
    */
   stop(): void {
-    console.log('stop 1');
-
-    if (speechSynthesis.speaking) {
-      console.log('stop 2');
-      speechSynthesis.cancel();
-
-      this.store.dispatch(
-        setSpeaking({
-          speaking: {
-            content: {
-              utterance: undefined,
-              utteranceOptions: undefined,
-            },
-            process: {
-              isRunning: false,
-              isPausedWhileUttering: false,
-              isMakingSoundNow: false,
-            },
-          },
-        })
-      );
-    }
+    this.synth?.cancel();
   }
 
   /**
@@ -351,58 +209,15 @@ export class SynthService implements OnDestroy {
     text: string
   ): void {
     setTimeout(() => {
-      console.log('synthesizeSpeechFromText 1');
-      // BŁAD DO NAPRAWIENIA, ŚCIEŻKA:
-      // - KLIKNIJ 'PAUZA'
-      // - ODŚWIEŻ STRONĘ
-      // - KLIKNIJ 'SPEAK TEXT' >>> NIE ZADZIALA CHYBA ZE KLIKNIEMY 2 RAZ
-      // const utterance = this.createUtteranceWithEventListenersOnly(text);
+      this.utterance = this.eventsHandler.getUtteranceWithHandlers();
       if (this.utterance) {
-        if (this.selected) {
-          console.log('synthesizeSpeechFromText 2');
-          this.utterance.voice = voice;
-          this.utterance.rate = rate;
-          this.utterance.pitch = pitch;
-          // this.utterance = utterance;
-
-          this.utterance
-            ? speechSynthesis.speak(this.utterance)
-            : console.log('error');
-        }
+        this.utterance.text = text;
+        this.utterance.voice = voice;
+        this.utterance.rate = rate;
+        this.utterance.pitch = pitch;
+        this.utterance.volume = 1;
+        this.synth?.speak(this.utterance);
       }
     }, 0);
-  }
-
-  // prepareUtterance(
-  //   voice: SpeechSynthesisVoice,
-  //   rate: number,
-  //   pitch: number,
-  //   text: string
-  // ) {
-  //   let utterance = new SpeechSynthesisUtterance(text);
-  //   let newUtterance: SpeechSynthesisUtterance | null = null;
-  //   if (utterance) {
-  //     newUtterance = attachSynthUtteranceListeners(
-  //       utterance,
-  //       detachSynthUtteranceListeners,
-  //       this.nextEvent
-  //     );
-  //     console.log(utterance, newUtterance);
-  //   }
-  // }
-
-  private createUtteranceWithEventListenersOnly(text: string = '') {
-    let utterance = new SpeechSynthesisUtterance(text);
-    let newUtterance: SpeechSynthesisUtterance | null = null;
-    if (utterance) {
-      newUtterance = attachSynthUtteranceListeners(
-        utterance,
-        detachSynthUtteranceListeners,
-        this.nextEvent
-      );
-      console.log(utterance, newUtterance);
-    }
-
-    return newUtterance;
   }
 }

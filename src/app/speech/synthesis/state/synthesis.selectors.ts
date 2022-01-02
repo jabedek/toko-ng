@@ -8,25 +8,25 @@ export const selectSynthesis = createFeatureSelector<AppState, SynthesisState>(
   synthesisFeatureKey
 );
 
-export const selectSynthesisDefaults = createSelector(
-  selectSynthesis,
-  (state) => state.defaults
-);
+// export const selectSynthesisDefaults = createSelector(
+//   selectSynthesis,
+//   (state) => state.defaults
+// );
 
-export const selectDefaultVoices = createSelector(
-  selectSynthesis,
-  (state) => state.defaults.voices
-);
+// export const selectDefaultVoices = createSelector(
+//   selectSynthesis,
+//   (state) => state.defaults.voices
+// );
 
-export const selectDefaultRecommendedVoices = createSelector(
-  selectSynthesis,
-  (state) => state.defaults.recommendedVoices
-);
+// export const selectDefaultRecommendedVoices = createSelector(
+//   selectSynthesis,
+//   (state) => state.defaults.recommendedVoices
+// );
 
-export const selectDefaultRates = createSelector(
-  selectSynthesis,
-  (state) => state.defaults.rates
-);
+// export const selectDefaultRates = createSelector(
+//   selectSynthesis,
+//   (state) => state.defaults.rates
+// );
 
 export const selectSynthesisSelected = createSelector(
   selectSynthesis,

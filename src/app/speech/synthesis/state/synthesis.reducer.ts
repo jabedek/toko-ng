@@ -3,16 +3,17 @@ import { createReducer, on } from '@ngrx/store';
 import * as SynthesisActions from './synthesis.actions';
 
 export const initialSynthesisState: SynthesisState = {
-  defaults: {
-    pitches: [],
-    rates: [],
-    recommendedVoices: {},
-    voices: [],
-  },
+  // defaults: {
+  //   pitches: [],
+  //   rates: [],
+  //   // recommendedVoices: {},
+  //   voices: [],
+  // },
   selected: {
     pitch: 1.25,
     rate: 1.5,
     voice: undefined,
+    volume: 1,
   },
   speaking: {
     process: {
@@ -29,41 +30,41 @@ export const initialSynthesisState: SynthesisState = {
 
 export const synthesisReducer = createReducer(
   initialSynthesisState,
-  on(SynthesisActions.loadDefaults, (state, { defaults }) => ({
-    ...state,
-    defaults,
-  })),
-  on(SynthesisActions.loadSynthesisPitches, (state, { pitches }) => ({
-    ...state,
-    defaults: {
-      ...state.defaults,
-      pitches,
-    },
-  })),
-  on(SynthesisActions.loadSynthesisRates, (state, { rates }) => ({
-    ...state,
-    defaults: {
-      ...state.defaults,
-      rates,
-    },
-  })),
-  on(
-    SynthesisActions.loadRecommendedVoices,
-    (state, { recommendedVoices }) => ({
-      ...state,
-      defaults: {
-        ...state.defaults,
-        recommendedVoices,
-      },
-    })
-  ),
-  on(SynthesisActions.loadVoices, (state, { voices }) => ({
-    ...state,
-    defaults: {
-      ...state.defaults,
-      voices,
-    },
-  })),
+  // on(SynthesisActions.loadDefaults, (state, { defaults }) => ({
+  //   ...state,
+  //   defaults,
+  // })),
+  // on(SynthesisActions.loadSynthesisPitches, (state, { pitches }) => ({
+  //   ...state,
+  //   defaults: {
+  //     ...state.defaults,
+  //     pitches,
+  //   },
+  // })),
+  // on(SynthesisActions.loadSynthesisRates, (state, { rates }) => ({
+  //   ...state,
+  //   defaults: {
+  //     ...state.defaults,
+  //     rates,
+  //   },
+  // })),
+  // on(
+  //   SynthesisActions.loadRecommendedVoices,
+  //   (state, { recommendedVoices }) => ({
+  //     ...state,
+  //     defaults: {
+  //       ...state.defaults,
+  //       recommendedVoices,
+  //     },
+  //   })
+  // ),
+  // on(SynthesisActions.loadVoices, (state, { voices }) => ({
+  //   ...state,
+  //   defaults: {
+  //     ...state.defaults,
+  //     voices,
+  //   },
+  // })),
   on(SynthesisActions.setSelected, (state, { selected }) => ({
     ...state,
     selected,

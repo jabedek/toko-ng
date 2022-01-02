@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
 
 export interface SynthesisState {
-  defaults: SynthesisDefaults;
+  // defaults: SynthesisDefaults;
   selected: SynthesisSelected;
   speaking: SynthesisSpeaking;
 }
@@ -11,14 +11,14 @@ export interface SynthesisState {
 export interface SynthesisDefaults {
   pitches: DefaultPitch[];
   rates: DefaultRate[];
-  recommendedVoices: RecommendedVoices;
   voices: SpeechSynthesisVoice[] | [];
 }
 
 export interface SynthesisSelected {
-  pitch: number;
+  pitch: number | undefined;
   rate: number | undefined;
   voice: SpeechSynthesisVoice | undefined;
+  volume: number | undefined;
 }
 
 export type DefaultRate = 0.25 | 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2;
@@ -28,6 +28,11 @@ export interface SynthesisSpeaking {
   content: SpeakingContent;
   process: SpeakingProcess;
 }
+
+export type SynthAndVoices = {
+  synth: SpeechSynthesis | undefined;
+  voices: any[];
+};
 
 export interface SpeakingProcess {
   /**

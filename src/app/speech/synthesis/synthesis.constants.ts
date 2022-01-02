@@ -20,3 +20,5 @@ export const UTTERANCE_ONLY_EVENTS = [
   'resume',
   'start',
 ];
+
+export const DEFAULT_TEXT = 'Romeo. Bravo. Tango. Uniform.';

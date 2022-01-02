@@ -1,28 +1,25 @@
 <h2>Synthesis</h2>
 <div class="text-to-speech-container">
-  <div *ngIf="defaults$ | async as defaults" class="form">
-    <div
-      class="field"
-      *ngIf="defaults.voices?.length && defaults.recommendedVoices"
-    >
+  <div class="form" *ngIf="params">
+    <div class="field" *ngIf="params.voice && service.voices?.length">
       <label for="voice-control" class="field__label"> Voice </label>
       <div class="field__content">
         <select
           id="voice-control"
           name="voice"
-          [(ngModel)]="selected.voice"
+          [(ngModel)]="params.voice"
           (change)="updateSelected('voice')"
           class="field__control field__control--select"
         >
           <option value="">- Select a voice -</option>
-          <option *ngFor="let voice of defaults.voices" [ngValue]="voice">
+          <option *ngFor="let voice of service.voices" [ngValue]="voice">
             {{ voice.name }}
           </option>
         </select>
       </div>
     </div>
 
-    <div class="field field--double">
+    <div class="field field--double" *ngIf="params.pitch">
       <section class="field__section">
         <label class="field__label"> Pitch </label>
         <input
@@ -32,27 +29,27 @@
           step="0.25"
           class="field__control"
           (change)="updateSelected('pitch')"
-          [(ngModel)]="selected.pitch"
+          [(ngModel)]="params.pitch"
         />
 
         <label class="field__label field__label--value">
-          {{ selected.pitch }}
+          {{ params!.pitch }}
         </label>
       </section>
 
-      <section class="field__section">
+      <section class="field__section" *ngIf="params.rate">
         <label class="field__label"> Rate </label>
         <input
           type="range"
-          [attr.min]="defaults.rates[0]"
-          [attr.max]="defaults.rates[defaults.rates.length - 1]"
+          [attr.min]="rates[0]"
+          [attr.max]="rates[rates.length - 1]"
           class="field__control"
           step="0.25"
           (change)="updateSelected('rate')"
-          [(ngModel)]="selected.rate"
+          [(ngModel)]="params.rate"
         />
         <label class="field__label field__label--value">
-          {{ selected.rate }}
+          {{ params!.rate }}
         </label>
       </section>
     </div>
@@ -176,8 +173,8 @@
     </section>
   </div>
 
-  <div class="state state--{{ state }}" [ngClass]="{state}"></div>
+  <div class="state state--{{ speechState }}" [ngClass]="{speechState}"></div>
 </div>
 <p class="speech-state">
-  <span> current event: {{ state ? state : "" }}</span>
+  <span> current event: {{ speechState ? speechState : "" }}</span>
 </p>

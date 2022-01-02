@@ -21,9 +21,7 @@ export const attachSynthUtteranceListeners: UtteranceListenerAttacher = (
   detachListenersFn: UtteranceListenerDetacher,
   nextEventFn: NextEventFn
 ): SpeechSynthesisUtterance => {
-  console.log(target);
   const newUtterance = detachListenersFn(target) as any;
-  console.log(newUtterance);
   UTTERANCE_ONLY_EVENTS.forEach(
     (eventType) =>
       (newUtterance[`on${eventType as SpeechSynthesisUtteranceEventType}`] = (
@@ -40,6 +38,7 @@ export const detachSynthUtteranceListeners: UtteranceListenerDetacher = (
   target: SpeechSynthesisUtterance
 ): SpeechSynthesisUtterance => {
   const newUtterance = target as any;
+
   UTTERANCE_ONLY_EVENTS.forEach(
     (eventType) => (newUtterance[`on${eventType}`] = undefined)
   );

@@ -6,6 +6,11 @@ import {
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { SynthService } from '../../synthesis.service';
+import {
+  DEFAULT_SYNTHESIS_RATES,
+  DEFAULT_TEXT,
+} from '../../synthesis.constants';
+import { takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-text-to-speech',
@@ -13,37 +18,33 @@ import { SynthService } from '../../synthesis.service';
   styleUrls: ['./text-to-speech.component.scss'],
 })
 export class TextToSpeechComponent implements OnInit, OnDestroy {
-  // Defaults
-
-  defaults$: Observable<SynthesisDefaults> | undefined;
-  // Selected
-  selected: SynthesisSelected = {
-    rate: 1,
-    pitch: 1,
-    voice: undefined,
-  };
-
-  state: SpeechSynthesisUtteranceEventType | undefined;
-
+  params: SynthesisSelected | undefined = undefined;
+  speechState: SpeechSynthesisUtteranceEventType | undefined;
+  rates = DEFAULT_SYNTHESIS_RATES;
   // other
   speakOnChange = true;
-  text: string = 'Romeo. Bravo. Tango. Uniform.';
+  text: string = DEFAULT_TEXT;
   private destroy$: Subject<void> = new Subject();
 
-  constructor(public service: SynthService) {
-    this.defaults$ = this.service.defaults$;
-
-    this.subscribeSynthSelected();
-  }
+  constructor(public service: SynthService) {}
 
   ngOnInit(): void {
-    this.service.speechStateSubect.subscribe((s) => {
-      console.log(s);
+    this.service.synthesisLoadedSub
+      .pipe(takeWhile((v) => v))
+      .subscribe((loaded) => {
+        console.log(loaded);
+        if (loaded) {
+          this.params = this.service.getDefaultsParams();
+        }
+      });
 
-      this.state = s;
+    this.service.speechStateSub.subscribe((state) => {
+      console.log(state);
 
-      if (s === 'boundary' && this.service.paused) {
-        s = 'pause';
+      this.speechState = state;
+
+      if (state === 'boundary' && this.service.paused) {
+        state = 'pause';
       }
     });
   }
@@ -77,7 +78,10 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   }
 
   previewVoice(): void {
-    this.service.previewVoice(this.text);
+    this.service.previewVoice(
+      this.text,
+      this.params || this.service.getDefaultsParams()
+    );
   }
 
   resume(): void {
@@ -85,7 +89,10 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   }
 
   speak(): void {
-    this.service.speak(this.text);
+    this.service.speak(
+      this.text,
+      this.params || this.service.getDefaultsParams()
+    );
   }
 
   stop(): void {
@@ -93,19 +100,16 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   }
 
   updateSelected(key: 'pitch' | 'rate' | 'voice') {
-    const value = this.selected[key];
-    this.service.updateSelected(key, value);
-
     if (this.speakOnChange) {
       this.previewVoice();
     }
   }
 
-  private subscribeSynthSelected() {
-    this.service.selected$.subscribe((data) => {
-      this.selected.voice = data.voice;
-      this.selected.rate = data.rate!;
-      this.selected.pitch = data.pitch;
-    });
-  }
+  // private subscribeSynthSelected() {
+  //   this.service.params$.subscribe((data) => {
+  //     this.params.voice = data.voice;
+  //     this.params.rate = data.rate!;
+  //     this.params.pitch = data.pitch;
+  //   });
+  // }
 }
