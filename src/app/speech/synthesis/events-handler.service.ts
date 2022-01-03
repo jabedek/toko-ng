@@ -21,9 +21,6 @@ export class EventsHandlerService {
   private eventSubject: Subject<SynthesisEvent> = new Subject();
   events$: Observable<SynthesisEvent> = this.eventSubject.asObservable();
 
-  constructor() {}
-
-  // was: createUtteranceWithEventListenersOnly
   getUtteranceWithHandlers(text: string = ''): SpeechSynthesisUtterance {
     const newUtterance: SpeechSynthesisUtterance | undefined | null =
       attachSynthUtteranceListeners(
@@ -67,9 +64,7 @@ export class EventsHandlerService {
         break;
       case SpeechSynthesisUtteranceEventType.end:
         detachSynthUtteranceListeners(utterance);
-        fetch('https://jsonplaceholder.typicode.com/todos/1')
-          .then((response) => response.json())
-          .then((json) => console.log(json));
+
         break;
     }
 

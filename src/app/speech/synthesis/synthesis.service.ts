@@ -8,7 +8,7 @@
  * Interfaces were copied from lib.dom.d.ts
  */
 import { Observable, ReplaySubject, Subject } from 'rxjs';
-import { ApplicationRef, Injectable, OnInit } from '@angular/core';
+import { ApplicationRef, Injectable, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '../../app-state/app-state.model';
 import {
@@ -20,11 +20,12 @@ import {
 import { LoaderService } from './loader.service';
 import { EventsHandlerService } from './events-handler.service';
 import { DEFAULT_TEXT } from './synthesis.constants';
+import { takeUntil } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SynthService {
+export class SynthService implements OnDestroy {
   voices: SpeechSynthesisVoice[] = [];
   synth: SpeechSynthesis | undefined = undefined;
   utterance: SpeechSynthesisUtterance | undefined = undefined;
@@ -34,6 +35,7 @@ export class SynthService {
 
   speechStateSub$: Subject<any> = new Subject();
   synthesisLoadedSub$: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
+  private destroy$: Subject<void> = new Subject();
 
   constructor(
     public store: Store<AppState>,
@@ -44,16 +46,9 @@ export class SynthService {
     this.init();
   }
 
-  private init() {
-    setTimeout(() => {
-      const { synth, voices } = this.loader.getSynthAndVoices();
-      this.synth = synth;
-      this.voices = voices;
-      this.utterance = this.eventsHandler.getUtteranceWithHandlers();
-      this.subscribeEventsStream();
-
-      this.synthesisLoadedSub$.next(true);
-    }, 0);
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getDefaultsParams(): SynthesisSelected {
@@ -70,28 +65,6 @@ export class SynthService {
     };
   }
 
-  private subscribeEventsStream(): void {
-    this.eventsHandler.events$.subscribe((event: SynthesisEvent) => {
-      const { utterance, processMessage } = this.eventsHandler.resolveEvent(
-        event,
-        this.utterance
-      );
-      this.utterance = utterance;
-      this.processMessages.push(processMessage);
-
-      const state = {
-        paused: !!this.synth?.paused,
-        pending: !!this.synth?.pending,
-        speaking: !!this.synth?.speaking,
-        fromEvent: event.type,
-      };
-
-      this.speechStateSub$.next(state);
-      this.ref.tick(); // update component from here (instead of standard CDR)
-    });
-  }
-
-  // UI/Feature functionality
   /**
    * Pauses current speech synthesis but doesn't clear speaking info.
    */
@@ -113,7 +86,6 @@ export class SynthService {
 
     if (!text.length) {
       console.warn('No text input has been provided. Using default text.');
-      text = DEFAULT_TEXT;
     }
 
     if (!params.voice) {
@@ -126,7 +98,7 @@ export class SynthService {
       params.voice || this.voices[0],
       params.rate || 1,
       params.pitch || 1,
-      text
+      text || DEFAULT_TEXT
     );
   }
 
@@ -157,5 +129,39 @@ export class SynthService {
         this.synth?.speak(this.utterance);
       }
     }, 0);
+  }
+
+  private init() {
+    setTimeout(() => {
+      const { synth, voices } = this.loader.getSynthAndVoices();
+      this.synth = synth;
+      this.voices = voices;
+      this.utterance = this.eventsHandler.getUtteranceWithHandlers();
+      this.subscribeEventsStream();
+
+      this.synthesisLoadedSub$.next(true);
+    }, 0);
+  }
+
+  private subscribeEventsStream(): void {
+    this.eventsHandler.events$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: SynthesisEvent) => {
+        const { utterance, processMessage } = this.eventsHandler.resolveEvent(
+          event,
+          this.utterance
+        );
+        this.utterance = utterance;
+        this.processMessages.push(processMessage);
+
+        const state = {
+          paused: !!this.synth?.paused,
+          pending: !!this.synth?.pending,
+          speaking: !!this.synth?.speaking,
+          fromEvent: event.type,
+        };
+
+        this.speechStateSub$.next(state);
+      });
   }
 }
