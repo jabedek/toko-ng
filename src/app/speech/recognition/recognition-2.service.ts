@@ -6,6 +6,8 @@ import {
   RecognitionDefaults,
   RecognitionSelected,
   SpeechRecognitionEventType,
+  SpeechRecognitionErrorEvent,
+  SpeechRecognitionEvent,
 } from './../../shared/models/recognition.model';
 import { takeUntil } from 'rxjs/operators';
 import {
@@ -34,9 +36,10 @@ import { getGrammar, getTopResultFromResults } from './utils/recognition.utils';
 
 declare var webkitSpeechRecognition: any;
 declare var webkitSpeechGrammarList: any;
+const SpeechRecognition = webkitSpeechRecognition;
+const SpeechGrammarList = webkitSpeechGrammarList;
 
-const SpeechRecognition = webkitSpeechRecognition,
-  SpeechGrammarList = webkitSpeechGrammarList;
+type SpeechRecognition = typeof SpeechRecognition;
 
 @Injectable({
   providedIn: 'root',
@@ -178,6 +181,8 @@ export class RecogService2 {
       date: moment().format('yyyy-mm-DD HH:mm:ss'),
       eventType: event.type,
     };
+
+    console.log(event);
 
     switch (event.type) {
       case SpeechRecognitionEventTypes.start:
