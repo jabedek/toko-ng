@@ -22,8 +22,6 @@ export class LoaderService {
       if (!this.voices.length) {
         this.synth.addEventListener('voiceschanged', (event) => {
           this.voices = this.synth.getVoices();
-          console.log(`Voices loaded (${this.voices.length}).`);
-          console.log('SYNTH', this.synth);
         });
       }
     }, 0);

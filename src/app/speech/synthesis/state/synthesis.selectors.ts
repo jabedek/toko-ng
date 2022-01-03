@@ -32,8 +32,3 @@ export const selectSynthesisSelected = createSelector(
   selectSynthesis,
   (state) => state.selected
 );
-
-export const selectSynthesisSpeaking = createSelector(
-  selectSynthesis,
-  (state) => state.speaking
-);

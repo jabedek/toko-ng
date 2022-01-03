@@ -5,7 +5,6 @@ import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
 export interface SynthesisState {
   // defaults: SynthesisDefaults;
   selected: SynthesisSelected;
-  speaking: SynthesisSpeaking;
 }
 
 export interface SynthesisDefaults {
@@ -24,63 +23,26 @@ export interface SynthesisSelected {
 export type DefaultRate = 0.25 | 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2;
 export type DefaultPitch = 0.25 | 0.5 | 0.75 | 1 | 1.25 | 1.5 | 1.75 | 2;
 
-export interface SynthesisSpeaking {
-  content: SpeakingContent;
-  process: SpeakingProcess;
-}
-
 export type SynthAndVoices = {
   synth: SpeechSynthesis | undefined;
   voices: any[];
 };
 
-export interface SpeakingProcess {
-  /**
-   * General information on whether or not synthesis has been requested to utter.
-   */
-  isRunning: boolean;
-
-  /**
-   * Information whether synthesis has been paused during utterance.
-   */
-  isPausedWhileUttering: boolean;
-
-  /**
-   * Detailed information whether an audible word is spoken in a given second.
-   * If there is a long pause (silence) in the text, this will be set to false.
-   */
-  isMakingSoundNow: boolean;
-}
-
-export interface SpeakingContent {
-  utterance: SpeechSynthesisUtterance | undefined;
-  utteranceOptions: SpeechSynthesisUtteranceOptions | undefined;
-}
-
 export interface RecommendedVoices {
   [key: string]: boolean;
 }
-
-// Event handling
 
 export interface UtteranceEventsSubscriptions {
   type: string;
   subscription: Subscription | undefined;
 }
 
-// export type ListenersAttacherFn = (
-//   target: SpeechSynthesisUtterance,
-//   logAllEvents?: boolean
-// ) => void;
-
 export type SynthesisEvent =
   | Event
   | SpeechSynthesisEvent
   | SpeechSynthesisErrorEvent;
 
-// export type SpeechSynthesisEventType = 'voiceschanged';
-
-export enum SpeechSynthesisUtteranceEventTypes {
+export enum SpeechSynthesisUtteranceEventType {
   start = 'start',
   end = 'end',
   pause = 'pause',
@@ -89,15 +51,6 @@ export enum SpeechSynthesisUtteranceEventTypes {
   mark = 'mark',
   error = 'error',
 }
-
-export type SpeechSynthesisUtteranceEventType =
-  | 'start'
-  | 'end'
-  | 'pause'
-  | 'resume'
-  | 'boundary'
-  | 'mark'
-  | 'error';
 
 export type UtteranceListenerDetacher = (
   target: SpeechSynthesisUtterance
@@ -111,6 +64,7 @@ export type UtteranceListenerAttacher = (
 
 export interface SynthesisProcessMessage extends ProcessMessage {
   name?: string;
+  elapsedTime: number | string;
   results?: {
     [key: string]: any;
   };

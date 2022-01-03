@@ -221,6 +221,11 @@
   }
 }
 
+.current-event {
+  float: right;
+  text-transform: uppercase;
+}
+
 .process-messages {
   margin: 6px 0;
   border: 1px solid grey;
@@ -246,22 +251,35 @@
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid grey;
+  padding: 4px;
 
   &__date {
     padding: 0 0.2rem;
     flex-shrink: 0;
+    color: grey;
     > span {
       font-family: "Space Mono", monospace !important;
     }
   }
 
-  &__event-type {
+  &__elapsed {
+    color: grey;
+  }
+
+  &__top-section {
     padding: 0 0.2rem;
     flex-shrink: 0;
 
     > span {
       font-family: "Space Mono", monospace !important;
     }
+  }
+
+  &__type {
+    background: black;
+    color: white;
+    border-radius: 0.2rem;
+    padding: 1px 2px;
   }
 
   &__result {
@@ -286,7 +304,7 @@
   }
 }
 
-.speechState {
+.speech-state {
   position: absolute;
   height: 50px;
   width: 50px;

@@ -3,9 +3,6 @@ import {
   SynthesisDefaults,
   // RecommendedVoices,
   SynthesisSelected,
-  SynthesisSpeaking,
-  SpeakingProcess,
-  SpeakingContent,
   DefaultRate,
 } from './../../../shared/models/synthesis.model';
 import { SpeechSynthesisUtteranceOptions } from '@ng-web-apis/speech';
@@ -52,17 +49,6 @@ export const setSelectedVoice = createAction(
   props<{ voice: SpeechSynthesisVoice }>()
 );
 
-// ### State.speaking
-export const setSpeaking = createAction(
-  '[App/Speech Synth] Set Speaking',
-  props<{ speaking: SynthesisSpeaking }>()
-);
-
-// ### State.speaking.process
-export const setSpeakingProcess = createAction(
-  '[App/Speech Synth] Set Speaking Process',
-  props<{ process: SpeakingProcess }>()
-);
 export const setIsRunning = createAction(
   '[App/Speech Synth] Set Is-Running',
   props<{ isRunning: boolean }>()
@@ -76,11 +62,6 @@ export const setIsMakingSoundNow = createAction(
   props<{ isMakingSoundNow: boolean }>()
 );
 
-// ### State.speaking.content
-export const setSpeakingContent = createAction(
-  '[App/Speech Synth] Set Speaking Content',
-  props<{ content: SpeakingContent }>()
-);
 export const setUtterance = createAction(
   '[App/Speech Synth] Set Utterance',
   props<{ utterance: SpeechSynthesisUtterance }>()

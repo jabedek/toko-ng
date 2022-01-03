@@ -7,7 +7,7 @@ import {
 } from 'src/app/shared/models/synthesis.model';
 import { roundToTwo } from './utils';
 
-export function readBoundaryEvent(event: SpeechSynthesisEvent) {
+export function logBoundaryEvent(event: SpeechSynthesisEvent) {
   console.log(
     (event.name as string).toUpperCase() +
       ' boundary reached after ' +

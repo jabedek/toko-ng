@@ -8,20 +8,13 @@
  * Interfaces were copied from lib.dom.d.ts
  */
 import { Observable, ReplaySubject, Subject } from 'rxjs';
-import { ApplicationRef, Injectable, OnDestroy, OnInit } from '@angular/core';
+import { ApplicationRef, Injectable, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import {
-  selectSynthesisSelected,
-  selectSynthesisSpeaking,
-} from './state/synthesis.selectors';
 import { AppState } from '../../app-state/app-state.model';
 import {
-  UtteranceEventsSubscriptions,
   RecommendedVoices,
   SynthesisSelected,
-  SynthesisSpeaking,
   SynthesisEvent,
-  SpeechSynthesisUtteranceEventType,
   SynthesisProcessMessage,
 } from './../../shared/models/synthesis.model';
 import { LoaderService } from './loader.service';
@@ -35,9 +28,9 @@ export class SynthService implements OnInit {
   voices: SpeechSynthesisVoice[] = [];
   synth: SpeechSynthesis | undefined = undefined;
   recommendedVoices: RecommendedVoices = {};
-  speechStateSub: Subject<SpeechSynthesisUtteranceEventType> = new Subject();
   processMessages: SynthesisProcessMessage[] = [];
 
+  speechStateSub: Subject<any> = new Subject();
   synthesisLoadedSub: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
 
   // // Selected
@@ -53,10 +46,6 @@ export class SynthService implements OnInit {
   // };
 
   // Speaking
-  speaking$: Observable<SynthesisSpeaking> = this.store.select(
-    selectSynthesisSpeaking
-  );
-  speaking: SynthesisSpeaking | undefined;
 
   paused = false;
   utterance: SpeechSynthesisUtterance | undefined = undefined;
@@ -100,20 +89,21 @@ export class SynthService implements OnInit {
 
   private subscribeEventsStream(): void {
     this.eventsHandler.events$.subscribe((event: SynthesisEvent) => {
-      const { paused, utterance } = this.eventsHandler.resolveEvent(
+      const { utterance, processMessage } = this.eventsHandler.resolveEvent(
         event,
-        this.utterance,
-        this.paused
+        this.utterance
       );
       this.utterance = utterance;
-      this.paused = paused;
+      this.processMessages.push(processMessage);
 
-      paused
-        ? this.speechStateSub.next('pause')
-        : this.speechStateSub.next(
-            event.type as SpeechSynthesisUtteranceEventType
-          );
+      const state = {
+        paused: !!this.synth?.paused,
+        pending: !!this.synth?.pending,
+        speaking: !!this.synth?.speaking,
+        fromEvent: event.type,
+      };
 
+      this.speechStateSub.next(state);
       this.ref.tick(); // update component from here (instead of standard CDR)
     });
   }
@@ -168,6 +158,7 @@ export class SynthService implements OnInit {
    */
   speak(text: string, params: SynthesisSelected): void {
     setTimeout(() => {
+      this.processMessages = [];
       this.paused = false;
 
       if (!text.length) {

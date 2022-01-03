@@ -116,18 +116,21 @@
 
   <div class="side-panel">
     <section class="section section--process-view">
-      <label class="label"> Process Events View </label>
+      <label class="label">
+        Process Events View
+        <span class="current-event">
+          {{ speechState ? speechState : "" }}</span
+        ></label
+      >
       <ul class="process-messages" #messagesEl>
         <li *ngFor="let message of service.processMessages" class="message">
           <div class="message-top">
-            <section class="message__event-type">
-              <!-- <pre>{{ message | json }}</pre> -->
-              <span>
+            <section class="message__top-section">
+              <span class="message__elapsed">
+                {{ "+" + message.elapsedTime + "s. " }}
+              </span>
+              <span class="message__type">
                 {{ message.eventType }}
-
-                <ng-container *ngIf="message.name">
-                  {{ " - " + message.name }}
-                </ng-container>
               </span>
             </section>
             <section class="message__date">
@@ -172,9 +175,8 @@
       </ul>
     </section>
   </div>
-
-  <div class="state state--{{ speechState }}" [ngClass]="{speechState}"></div>
+  <div
+    class="speech-state speech-state--{{ speechState }}"
+    [ngClass]="{speechState}"
+  ></div>
 </div>
-<p class="speech-state">
-  <span> current event: {{ speechState ? speechState : "" }}</span>
-</p>

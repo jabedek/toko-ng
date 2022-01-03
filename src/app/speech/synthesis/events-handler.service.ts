@@ -3,15 +3,16 @@ import * as moment from 'moment';
 import { Observable, Subject } from 'rxjs';
 import {
   SpeechSynthesisUtteranceEventType,
-  SpeechSynthesisUtteranceEventTypes,
+  // SpeechSynthesisUtteranceEventType,
   SynthesisEvent,
   SynthesisProcessMessage,
 } from 'src/app/shared/models/synthesis.model';
 import {
   attachSynthUtteranceListeners,
   detachSynthUtteranceListeners,
-  readBoundaryEvent,
+  logBoundaryEvent,
 } from './utils/speech-synthesis-events.utils';
+import { roundToTwo } from './utils/utils';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +20,6 @@ import {
 export class EventsHandlerService {
   private eventSubject: Subject<SynthesisEvent> = new Subject();
   events$: Observable<SynthesisEvent> = this.eventSubject.asObservable();
-  processMessages: SynthesisProcessMessage[] = [];
 
   constructor() {}
 
@@ -31,68 +31,48 @@ export class EventsHandlerService {
         detachSynthUtteranceListeners,
         (event: SynthesisEvent) => this.eventSubject.next(event)
       );
-    console.log(newUtterance);
 
     return newUtterance;
   }
 
-  // private nextEvent = (event: SynthesisEvent) => {
-  //   this.eventSubject.next(event);
-  // };
-
-  // was: dispatchEventHandle
   resolveEvent(
     event: SynthesisEvent,
-    utterance: SpeechSynthesisUtterance | undefined,
-    pause: boolean
+    utterance: SpeechSynthesisUtterance | undefined
   ) {
-    console.log('resolve', utterance, event);
-
     if (!utterance) {
       utterance = this.getUtteranceWithHandlers();
     }
-    console.log('handling...', event.type, event);
 
+    const elapsedTimeMS = (event as any).elapsedTime as number;
     const processMessage: SynthesisProcessMessage = {
       date: moment().format('yyyy-mm-DD HH:mm:ss'),
       eventType: event.type,
+      elapsedTime: roundToTwo(elapsedTimeMS / 1000),
     };
 
-    let paused = pause;
-
     switch (event.type) {
-      case SpeechSynthesisUtteranceEventTypes.start:
-        paused = false;
+      case SpeechSynthesisUtteranceEventType.start:
         break;
-      case SpeechSynthesisUtteranceEventTypes.boundary:
+      case SpeechSynthesisUtteranceEventType.boundary:
         processMessage.name = (event as SpeechSynthesisEvent).name;
-        readBoundaryEvent(event as SpeechSynthesisEvent);
+        logBoundaryEvent(event as SpeechSynthesisEvent);
         break;
-      case SpeechSynthesisUtteranceEventTypes.error:
+      case SpeechSynthesisUtteranceEventType.error:
         break;
-      case SpeechSynthesisUtteranceEventTypes.mark:
+      case SpeechSynthesisUtteranceEventType.mark:
         break;
-      case SpeechSynthesisUtteranceEventTypes.pause:
-        paused = true;
+      case SpeechSynthesisUtteranceEventType.pause:
         break;
-      case SpeechSynthesisUtteranceEventTypes.resume:
-        paused = false;
+      case SpeechSynthesisUtteranceEventType.resume:
         break;
-      case SpeechSynthesisUtteranceEventTypes.end:
+      case SpeechSynthesisUtteranceEventType.end:
         detachSynthUtteranceListeners(utterance);
+        fetch('https://jsonplaceholder.typicode.com/todos/1')
+          .then((response) => response.json())
+          .then((json) => console.log(json));
         break;
     }
-    this.processMessages.push(processMessage);
-    console.log(processMessage);
 
-    return { paused, utterance };
-
-    // paused
-    //   ? this.speechStateSubect.next('pause')
-    //   : this.speechStateSubect.next(
-    //       event.type as SpeechSynthesisUtteranceEventType
-    //     );
-
-    // this.ref.tick(); // update component from here (instead of standard CDR)
+    return { utterance, processMessage };
   }
 }

@@ -2,12 +2,8 @@
 export function getTopResultFromResults(
   results: SpeechRecognitionResultList
 ): { transcript: string; confidence: string; isFinal: boolean }[] {
-  console.log(results);
-
   return Array.from(results)
     .map((result: SpeechRecognitionResult) => {
-      if (result.isFinal) console.log(result.isFinal);
-
       return { alternative: result[0], isFinal: result.isFinal };
     })
     .map(

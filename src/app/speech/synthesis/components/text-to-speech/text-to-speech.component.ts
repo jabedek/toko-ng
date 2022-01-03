@@ -1,8 +1,4 @@
-import {
-  SpeechSynthesisUtteranceEventType,
-  SynthesisDefaults,
-  SynthesisSelected,
-} from './../../../../shared/models/synthesis.model';
+import { SynthesisSelected } from './../../../../shared/models/synthesis.model';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { SynthService } from '../../synthesis.service';
@@ -19,11 +15,11 @@ import { takeWhile } from 'rxjs/operators';
 })
 export class TextToSpeechComponent implements OnInit, OnDestroy {
   params: SynthesisSelected | undefined = undefined;
-  speechState: SpeechSynthesisUtteranceEventType | undefined;
+  speechState: any | undefined;
+  utteranceState: any;
+  text = DEFAULT_TEXT;
   rates = DEFAULT_SYNTHESIS_RATES;
-  // other
   speakOnChange = true;
-  text: string = DEFAULT_TEXT;
   private destroy$: Subject<void> = new Subject();
 
   constructor(public service: SynthService) {}
@@ -32,20 +28,14 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
     this.service.synthesisLoadedSub
       .pipe(takeWhile((v) => v))
       .subscribe((loaded) => {
-        console.log(loaded);
         if (loaded) {
           this.params = this.service.getDefaultsParams();
         }
       });
 
     this.service.speechStateSub.subscribe((state) => {
-      console.log(state);
-
-      this.speechState = state;
-
-      if (state === 'boundary' && this.service.paused) {
-        state = 'pause';
-      }
+      this.speechState = state.fromEvent;
+      this.utteranceState = state;
     });
   }
 
