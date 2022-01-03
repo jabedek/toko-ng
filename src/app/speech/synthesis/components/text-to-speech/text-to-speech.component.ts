@@ -6,7 +6,7 @@ import {
   DEFAULT_SYNTHESIS_RATES,
   DEFAULT_TEXT,
 } from '../../synthesis.constants';
-import { takeWhile } from 'rxjs/operators';
+import { takeUntil, takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-text-to-speech',
@@ -25,7 +25,7 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   constructor(public service: SynthService) {}
 
   ngOnInit(): void {
-    this.service.synthesisLoadedSub
+    this.service.synthesisLoadedSub$
       .pipe(takeWhile((v) => v))
       .subscribe((loaded) => {
         if (loaded) {
@@ -33,10 +33,12 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
         }
       });
 
-    this.service.speechStateSub.subscribe((state) => {
-      this.speechState = state.fromEvent;
-      this.utteranceState = state;
-    });
+    this.service.speechStateSub$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((state) => {
+        this.speechState = state.fromEvent;
+        this.utteranceState = state;
+      });
   }
 
   ngOnDestroy() {
@@ -67,13 +69,6 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
     this.service.pause();
   }
 
-  previewVoice(): void {
-    this.service.previewVoice(
-      this.text,
-      this.params || this.service.getDefaultsParams()
-    );
-  }
-
   resume(): void {
     this.service.resume();
   }
@@ -91,15 +86,7 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
 
   updateSelected(key: 'pitch' | 'rate' | 'voice') {
     if (this.speakOnChange) {
-      this.previewVoice();
+      this.speak();
     }
   }
-
-  // private subscribeSynthSelected() {
-  //   this.service.params$.subscribe((data) => {
-  //     this.params.voice = data.voice;
-  //     this.params.rate = data.rate!;
-  //     this.params.pitch = data.pitch;
-  //   });
-  // }
 }

@@ -24,31 +24,16 @@ import { DEFAULT_TEXT } from './synthesis.constants';
 @Injectable({
   providedIn: 'root',
 })
-export class SynthService implements OnInit {
+export class SynthService {
   voices: SpeechSynthesisVoice[] = [];
   synth: SpeechSynthesis | undefined = undefined;
+  utterance: SpeechSynthesisUtterance | undefined = undefined;
+
   recommendedVoices: RecommendedVoices = {};
   processMessages: SynthesisProcessMessage[] = [];
 
-  speechStateSub: Subject<any> = new Subject();
-  synthesisLoadedSub: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
-
-  // // Selected
-  // selected$: Observable<SynthesisSelected> = this.store.select(
-  //   selectSynthesisSelected
-  // );
-
-  // selected: SynthesisSelected = {
-  //   voice: undefined,
-  //   rate: 1,
-  //   pitch: 1,
-  //   volume: 1,
-  // };
-
-  // Speaking
-
-  paused = false;
-  utterance: SpeechSynthesisUtterance | undefined = undefined;
+  speechStateSub$: Subject<any> = new Subject();
+  synthesisLoadedSub$: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
 
   constructor(
     public store: Store<AppState>,
@@ -59,8 +44,6 @@ export class SynthService implements OnInit {
     this.init();
   }
 
-  ngOnInit(): void {}
-
   private init() {
     setTimeout(() => {
       const { synth, voices } = this.loader.getSynthAndVoices();
@@ -69,7 +52,7 @@ export class SynthService implements OnInit {
       this.utterance = this.eventsHandler.getUtteranceWithHandlers();
       this.subscribeEventsStream();
 
-      this.synthesisLoadedSub.next(true);
+      this.synthesisLoadedSub$.next(true);
     }, 0);
   }
 
@@ -103,7 +86,7 @@ export class SynthService implements OnInit {
         fromEvent: event.type,
       };
 
-      this.speechStateSub.next(state);
+      this.speechStateSub$.next(state);
       this.ref.tick(); // update component from here (instead of standard CDR)
     });
   }
@@ -113,12 +96,20 @@ export class SynthService implements OnInit {
    * Pauses current speech synthesis but doesn't clear speaking info.
    */
   pause(): void {
-    this.paused = true;
     this.synth?.pause();
   }
 
-  previewVoice(text: string, params: SynthesisSelected): void {
+  resume() {
+    this.synth?.resume();
+  }
+
+  /**
+   * Synthesizes speech from the text for the currently-selected voice
+   */
+  speak(text: string, params: SynthesisSelected): void {
     this.stop();
+
+    this.processMessages = [];
 
     if (!text.length) {
       console.warn('No text input has been provided. Using default text.');
@@ -137,50 +128,6 @@ export class SynthService implements OnInit {
       params.pitch || 1,
       text
     );
-  }
-
-  resume() {
-    this.paused = false;
-    this.synth?.resume();
-    // this.store.dispatch(
-    //   setSpeakingProcess({
-    //     process: {
-    //       isRunning: true,
-    //       isPausedWhileUttering: false,
-    //       isMakingSoundNow: true,
-    //     },
-    //   })
-    // );
-  }
-
-  /**
-   * Synthesizes speech from the text for the currently-selected voice
-   */
-  speak(text: string, params: SynthesisSelected): void {
-    setTimeout(() => {
-      this.processMessages = [];
-      this.paused = false;
-
-      if (!text.length) {
-        console.warn('No text input has been provided. Using default text.');
-        text = DEFAULT_TEXT;
-      }
-
-      if (!params.voice) {
-        console.warn(
-          'Expected a voice, but none was selected. Selecting first voice from the list.'
-        );
-      }
-
-      this.stop();
-
-      this.synthesizeSpeechFromText(
-        params.voice || this.voices[0],
-        params.rate || 1,
-        params.pitch || 1,
-        text
-      );
-    }, 0);
   }
 
   /**

@@ -100,16 +100,12 @@ export class SpeechToTextComponent
 
   subscribeRecogSelected() {
     this.service.selected$.subscribe((data) => {
-      console.log('data.interimResults', data.interimResults);
-
       this.selected.interimResults = data.interimResults;
       this.selected.lang = data.lang;
     });
   }
 
   textToWords(text: string) {
-    console.log('speech to text');
-
     const whitespacesTest = /\s*/gm;
     const specialSymbolsTest = /[\.]*[\-]*[\+]*[\/]*/gm;
     let words = text
