@@ -170,6 +170,7 @@
   &__top-section {
     padding: 0 0.2rem;
     flex-shrink: 0;
+    display: flex;
 
     > span {
       font-family: "Space Mono", monospace !important;
@@ -180,6 +181,7 @@
     background: black;
     color: white;
     border-radius: 0.2rem;
+    width: 110px;
     padding: 1px 2px;
   }
 
@@ -195,7 +197,7 @@
   }
 
   &__error {
-    padding: 0 0.2rem;
+    padding: 0.25rem;
 
     > p,
     span {

@@ -35,6 +35,7 @@ export class SynthService implements OnDestroy {
 
   speechStateSub$: Subject<any> = new Subject();
   synthesisLoadedSub$: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
+
   private destroy$: Subject<void> = new Subject();
 
   constructor(
@@ -162,6 +163,7 @@ export class SynthService implements OnDestroy {
         };
 
         this.speechStateSub$.next(state);
+        this.ref.tick(); // update component from here (instead of standard CDR)
       });
   }
 }
