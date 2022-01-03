@@ -31,6 +31,7 @@ import { Observable, Subject } from 'rxjs';
 import { RECOG_EVENTS } from './recognition.constants';
 import * as moment from 'moment';
 import { getGrammar, getTopResultFromResults } from './utils/recognition.utils';
+import { roundToTwo } from '../synthesis/utils/utils';
 
 //
 
@@ -54,6 +55,7 @@ export class RecogService2 {
   foundWords = '';
   textDisplayed = '';
   tempWords = '';
+  startedAt = 0;
 
   processMessages: RecognitionProcessMessage[] = [];
 
@@ -174,15 +176,12 @@ export class RecogService2 {
   };
 
   dispatchEventHandle(event: RecognitionEvent) {
-    // start > audiostart > (soundstart > speechstart) > results/error/nomatch > (speechend > soundend) > audioend > end
-    // console.log('handling...', event);
-
+    const elapsedTimeMS = Date.now() - this.startedAt;
     const processMessage: RecognitionProcessMessage = {
       date: moment().format('yyyy-mm-DD HH:mm:ss'),
       eventType: event.type,
+      elapsedTime: roundToTwo(elapsedTimeMS / 1000),
     };
-
-    console.log(event);
 
     switch (event.type) {
       case SpeechRecognitionEventTypes.start:
@@ -206,7 +205,6 @@ export class RecogService2 {
         };
 
         this.handleResult(transcript);
-        // console.log(processMessage);
         break;
       case SpeechRecognitionEventTypes.error:
         processMessage.error = (event as SpeechRecognitionErrorEvent).error;
@@ -275,6 +273,7 @@ export class RecogService2 {
 
   // UI/Feature functionality
   listen() {
+    this.startedAt = Date.now();
     if (!this.isListening) {
       // console.log('elo');
 

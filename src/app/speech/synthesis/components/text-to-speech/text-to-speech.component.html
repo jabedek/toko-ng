@@ -65,8 +65,7 @@
             [(ngModel)]="text"
             (keyup)="handleKey($event)"
             class="field__control field__control--textarea"
-          >
-          </textarea>
+          ></textarea>
         </div>
       </section>
 
@@ -119,8 +118,10 @@
     <section class="section section--process-view">
       <label class="label">
         Process Events View
-        <span class="current-event"> {{ speechState ? speechState : "" }}</span>
-      </label>
+        <span class="current-event">
+          {{ speechState ? speechState : "" }}</span
+        ></label
+      >
       <ul class="process-messages" #messagesEl>
         <li *ngFor="let message of service.processMessages" class="message">
           <div class="message-top">

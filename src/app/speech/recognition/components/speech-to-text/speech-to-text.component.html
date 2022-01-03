@@ -67,16 +67,22 @@
 
   <div class="side-panel">
     <section class="section section--process-view">
-      <label class="label"> Process Events View </label>
+      <label class="label">
+        Process Events View
+        <span class="current-event"> {{ state ? state : "" }}</span>
+      </label>
       <ul class="process-messages" #messagesEl>
         <li *ngFor="let message of service.processMessages" class="message">
           <div class="message-top">
-            <section class="message__event-type">
-              <span>
+            <section class="message__top-section">
+              <span class="message__elapsed">
+                {{ "+" + message.elapsedTime + "s. " }}
+              </span>
+              <span class="message__type">
                 {{ message.eventType }}
 
                 <ng-container *ngIf="message.eventType === 'result'">
-                  {{ message.topResult?.isFinal ? "(final)" : "(interim)" }}
+                  <!-- {{ message.topResult?.isFinal ? "(final)" : "(interim)" }} -->
                 </ng-container>
               </span>
             </section>
@@ -92,13 +98,17 @@
               *ngIf="message.topResult"
               [ngClass]="{ 'final-result': message.topResult.isFinal }"
             >
-              <!-- isFinal{{ message.topResult.isFinal }} -->
-              <p class="message__transcript">
-                [wykryto]: "{{ message.topResult.transcript }}"
-              </p>
-              <p class="message__confidence">
-                [pewność]: {{ message.topResult.confidence }}
-              </p>
+              <div class="message">
+                {{ message.topResult?.isFinal ? "(FINAL)" : "(INTERIM)" }}
+
+                <!-- isFinal{{ message.topResult.isFinal }} -->
+                <p class="message__transcript">
+                  [wykryto]: "{{ message.topResult.transcript }}"
+                </p>
+                <p class="message__confidence">
+                  [pewność]: {{ message.topResult.confidence }}
+                </p>
+              </div>
             </section>
 
             <section class="message__error" *ngIf="message.error">
@@ -132,6 +142,6 @@
   </div>
   <div class="state state--{{ state }}" [ngClass]="{state}"></div>
 </div>
-<p class="speech-state">
+<!-- <p class="speech-state">
   <span> current event: {{ state ? state : "" }}</span>
-</p>
+</p> -->

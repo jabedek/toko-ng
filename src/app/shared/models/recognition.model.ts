@@ -24,6 +24,7 @@ export interface RecognitionLanguage {
 }
 
 export interface RecognitionProcessMessage extends ProcessMessage {
+  elapsedTime: string | number;
   topResult?: {
     transcript?: string;
     confidence?: string;
