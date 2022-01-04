@@ -2,10 +2,7 @@ import { SynthesisSelected } from './../../../../shared/models/synthesis.model';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { SynthService } from '../../synthesis.service';
-import {
-  DEFAULT_SYNTHESIS_RATES,
-  DEFAULT_TEXT,
-} from '../../synthesis.constants';
+import { DEFAULT_SYNTHESIS_RATES, DEFAULT_TEXT } from '../../synthesis.constants';
 import { takeUntil, takeWhile } from 'rxjs/operators';
 
 @Component({
@@ -25,20 +22,16 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   constructor(public service: SynthService) {}
 
   ngOnInit(): void {
-    this.service.synthesisLoadedSub$
-      .pipe(takeWhile((v) => v))
-      .subscribe((loaded) => {
-        if (loaded) {
-          this.params = this.service.getDefaultsParams();
-        }
-      });
+    this.service.synthesisLoadedSub$.pipe(takeWhile((v) => v)).subscribe((loaded) => {
+      if (loaded) {
+        this.params = this.service.getDefaultParams();
+      }
+    });
 
-    this.service.speechStateSub$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((state) => {
-        this.speechState = state.fromEvent;
-        this.utteranceState = state;
-      });
+    this.service.speechStateSub$.pipe(takeUntil(this.destroy$)).subscribe((state) => {
+      this.speechState = state.fromEvent;
+      this.utteranceState = state;
+    });
   }
 
   ngOnDestroy() {
@@ -74,10 +67,7 @@ export class TextToSpeechComponent implements OnInit, OnDestroy {
   }
 
   speak(): void {
-    this.service.speak(
-      this.text,
-      this.params || this.service.getDefaultsParams()
-    );
+    this.service.speak(this.text, this.params || this.service.getDefaultParams());
   }
 
   stop(): void {

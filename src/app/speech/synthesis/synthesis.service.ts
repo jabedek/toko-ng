@@ -10,13 +10,8 @@
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { ApplicationRef, Injectable, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { AppState } from '../../app-state/app-state.model';
-import {
-  RecommendedVoices,
-  SynthesisSelected,
-  SynthesisEvent,
-  SynthesisProcessMessage,
-} from './../../shared/models/synthesis.model';
+// import { AppState } from '../../app-state/app-state.model';
+import { RecommendedVoices, SynthesisSelected, SynthesisEvent, SynthesisProcessMessage } from './../../shared/models/synthesis.model';
 import { LoaderService } from './loader.service';
 import { EventsHandlerService } from './events-handler.service';
 import { DEFAULT_TEXT } from './synthesis.constants';
@@ -39,7 +34,7 @@ export class SynthService implements OnDestroy {
   private destroy$: Subject<void> = new Subject();
 
   constructor(
-    public store: Store<AppState>,
+    // public store: Store<AppState>,
     public ref: ApplicationRef,
     private loader: LoaderService,
     private eventsHandler: EventsHandlerService
@@ -52,17 +47,12 @@ export class SynthService implements OnDestroy {
     this.destroy$.complete();
   }
 
-  getDefaultsParams(): SynthesisSelected {
+  getDefaultParams(): SynthesisSelected {
     return {
       rate: 1.5,
       pitch: 1.25,
       volume: 1,
-      voice:
-        this.voices.find(
-          (v) => v.name === 'Microsoft Adam - Polish (Poland)'
-        ) ||
-        this.voices[0] ||
-        undefined,
+      voice: this.voices.find((v) => v.name === 'Microsoft Adam - Polish (Poland)') || this.voices[0] || undefined,
     };
   }
 
@@ -90,17 +80,10 @@ export class SynthService implements OnDestroy {
     }
 
     if (!params.voice) {
-      console.warn(
-        'Expected a voice, but none was selected. Selecting first voice from the list.'
-      );
+      console.warn('Expected a voice, but none was selected. Selecting first voice from the list.');
     }
 
-    this.synthesizeSpeechFromText(
-      params.voice || this.voices[0],
-      params.rate || 1,
-      params.pitch || 1,
-      text || DEFAULT_TEXT
-    );
+    this.synthesizeSpeechFromText(params.voice || this.voices[0], params.rate || 1, params.pitch || 1, text || DEFAULT_TEXT);
   }
 
   /**
@@ -113,12 +96,7 @@ export class SynthService implements OnDestroy {
   /**
    * Performs the low-level speech synthesis for the given voice, rate, and text.
    */
-  private synthesizeSpeechFromText(
-    voice: SpeechSynthesisVoice,
-    rate: number,
-    pitch: number,
-    text: string
-  ): void {
+  private synthesizeSpeechFromText(voice: SpeechSynthesisVoice, rate: number, pitch: number, text: string): void {
     setTimeout(() => {
       this.utterance = this.eventsHandler.getUtteranceWithHandlers();
       if (this.utterance) {
@@ -145,25 +123,20 @@ export class SynthService implements OnDestroy {
   }
 
   private subscribeEventsStream(): void {
-    this.eventsHandler.events$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((event: SynthesisEvent) => {
-        const { utterance, processMessage } = this.eventsHandler.resolveEvent(
-          event,
-          this.utterance
-        );
-        this.utterance = utterance;
-        this.processMessages.push(processMessage);
+    this.eventsHandler.events$.pipe(takeUntil(this.destroy$)).subscribe((event: SynthesisEvent) => {
+      const { utterance, processMessage } = this.eventsHandler.resolveEvent(event, this.utterance);
+      this.utterance = utterance;
+      this.processMessages.push(processMessage);
 
-        const state = {
-          paused: !!this.synth?.paused,
-          pending: !!this.synth?.pending,
-          speaking: !!this.synth?.speaking,
-          fromEvent: event.type,
-        };
+      const state = {
+        paused: !!this.synth?.paused,
+        pending: !!this.synth?.pending,
+        speaking: !!this.synth?.speaking,
+        fromEvent: event.type,
+      };
 
-        this.speechStateSub$.next(state);
-        this.ref.tick(); // update component from here (instead of standard CDR)
-      });
+      this.speechStateSub$.next(state);
+      this.ref.tick(); // update component from here (instead of standard CDR)
+    });
   }
 }

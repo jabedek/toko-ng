@@ -1,67 +1,38 @@
 <h2>Recognition</h2>
 <div class="speech-to-text-container">
-  <div *ngIf="langs$ | async as langs" class="form">
+  <div *ngIf="params" class="form">
     <div class="field">
-      <label class="field__label"> Language: </label>
-      <select
-        [(ngModel)]="selected.lang"
-        (change)="updateSelected('lang')"
-        class="field__control"
-      >
+      <label class="field__label">Language</label>
+      <select [(ngModel)]="params.lang" (change)="updateSelected('lang')" class="field__control">
         <option value="">- Select a language -</option>
-        <option *ngFor="let lang of langs" [ngValue]="lang">
-          {{ lang.name }} {{ lang.langCode }}
-        </option>
+        <option *ngFor="let lang of service.langs" [ngValue]="lang">{{ lang.name }} {{ lang.langCode }}</option>
       </select>
     </div>
 
     <div class="field">
-      <label class="field__label"
-        >Capture interim results (results that are not yet final)</label
-      >
-      <section>
-        Yes
-        <input
-          type="radio"
-          [(ngModel)]="selected.interimResults"
-          (change)="updateSelected('interimResults')"
-          class="field__control"
-          [value]="true"
-        />
-      </section>
-      <section>
-        No
-        <input
-          type="radio"
-          [(ngModel)]="selected.interimResults"
-          (change)="updateSelected('interimResults')"
-          class="field__control"
-          [value]="false"
-        />
-      </section>
+      <div class="checkbox-input">
+        <div class="checkbox-wrapper">
+          <input
+            type="checkbox"
+            [(ngModel)]="params.interimResults"
+            (change)="updateSelected('interimResults')"
+            [value]="true"
+            class="field__control field__control--checkbox" />
+        </div>
+        <label class="field__label">Capture interim (not yet final) results</label>
+      </div>
     </div>
 
     <div class="field">
       <label class="field__label">Terms to focus on</label>
-      <input
-        [(ngModel)]="termsToFind"
-        (keydown)="updateSelected('terms')"
-        class="field__control"
-      />
+
+      <input [(ngModel)]="termsToFind" (keydown)="updateSelected('terms')" class="field__control" />
     </div>
 
     <div class="form-actions">
-      <button type="button" (click)="listen()" class="form-actions__button">
-        Listen
-      </button>
+      <button type="button" (click)="listen()" class="form-actions__button">Listen</button>
 
-      <button
-        type="button"
-        (click)="stop()"
-        class="form-actions__button form-actions__button--secondary"
-      >
-        Stop listening
-      </button>
+      <button type="button" (click)="stop()" class="form-actions__button form-actions__button--secondary">Stop listening</button>
     </div>
   </div>
 
@@ -69,66 +40,41 @@
     <section class="section section--process-view">
       <label class="label">
         Process Events View
-        <span class="current-event"> {{ state ? state : "" }}</span>
+        <span class="current-event">{{ speechState ? speechState : "" }}</span>
       </label>
       <ul class="process-messages" #messagesEl>
         <li *ngFor="let message of service.processMessages" class="message">
           <div class="message-top">
             <section class="message__top-section">
+              <span class="message__type">
+                {{ message.eventType }}
+              </span>
               <span class="message__elapsed">
                 {{ "+" + message.elapsedTime + "s. " }}
               </span>
-              <span class="message__type">
-                {{ message.eventType }}
-
-                <ng-container *ngIf="message.eventType === 'result'">
-                  <!-- {{ message.topResult?.isFinal ? "(final)" : "(interim)" }} -->
-                </ng-container>
-              </span>
-            </section>
-            <section class="message__date">
-              <span>
+              <span class="message__date">
                 {{ message.date }}
               </span>
             </section>
           </div>
           <div class="message-bottom">
-            <section
-              class="message__result"
-              *ngIf="message.topResult"
-              [ngClass]="{ 'final-result': message.topResult.isFinal }"
-            >
+            <!-- <section class="message__result" *ngIf="message.topResult" [ngClass]="{ 'final-result': message.topResult.isFinal }">
               <div class="message">
                 {{ message.topResult?.isFinal ? "(FINAL)" : "(INTERIM)" }}
 
-                <!-- isFinal{{ message.topResult.isFinal }} -->
-                <p class="message__transcript">
-                  [wykryto]: "{{ message.topResult.transcript }}"
-                </p>
-                <p class="message__confidence">
-                  [pewność]: {{ message.topResult.confidence }}
-                </p>
+                <p class="message__transcript">[wykryto]: "{{ message.topResult.transcript }}"</p>
+                <p class="message__confidence">[pewność]: {{ message.topResult.confidence }}</p>
               </div>
-            </section>
+            </section> -->
 
             <section class="message__error" *ngIf="message.error">
               <ng-container [ngSwitch]="message.error">
                 <span class="message__error-desc" *ngSwitchCase="'no-speech'">
-                  [no-speech] Nie wykryto mowy ze strony użytkownika (nikt nic
-                  nie mówi?).
+                  [no-speech] Nie wykryto mowy ze strony użytkownika (nikt nic nie mówi?).
                 </span>
-                <span
-                  class="message__error-desc"
-                  *ngSwitchCase="'audio-capture'"
-                >
-                  [audio-capture] Problem z wyłapaniem audio.
-                </span>
-                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">
-                  [not-allowed] Brak zezwolenia.
-                </span>
-                <span class="message__error-desc" *ngSwitchDefault>
-                  [{{ message.error }}] Błąd
-                </span>
+                <span class="message__error-desc" *ngSwitchCase="'audio-capture'">[audio-capture] Problem z wyłapaniem audio.</span>
+                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">[not-allowed] Brak zezwolenia.</span>
+                <span class="message__error-desc" *ngSwitchDefault>[{{ message.error }}] Błąd</span>
               </ng-container>
             </section>
           </div>
@@ -137,11 +83,8 @@
     </section>
 
     <section class="section">
-      <label class="label"> Found words: {{ service.textDisplayed }} </label>
+      <label class="label">Found words: {{ service.textDisplayed }}</label>
     </section>
   </div>
-  <div class="state state--{{ state }}" [ngClass]="{state}"></div>
+  <div class="state state--{{ speechState }}" [ngClass]="{speechState}"></div>
 </div>
-<!-- <p class="speech-state">
-  <span> current event: {{ state ? state : "" }}</span>
-</p> -->

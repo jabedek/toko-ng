@@ -126,15 +126,14 @@
         <li *ngFor="let message of service.processMessages" class="message">
           <div class="message-top">
             <section class="message__top-section">
-              <span class="message__elapsed">
-                {{ "+" + message.elapsedTime + "s. " }}
-              </span>
               <span class="message__type">
                 {{ message.eventType }}
               </span>
-            </section>
-            <section class="message__date">
-              <span>
+              <span class="message__elapsed">
+                {{ "+" + message.elapsedTime + "s. " }}
+              </span>
+
+              <span class="message__date">
                 {{ message.date }}
               </span>
             </section>

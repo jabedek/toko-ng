@@ -1,9 +1,5 @@
-import { Injectable } from '@angular/core';
 import { SynthAndVoices } from 'src/app/shared/models/synthesis.model';
 
-@Injectable({
-  providedIn: 'root',
-})
 export class LoaderService {
   private voices: SpeechSynthesisVoice[] = [];
   private synth: SpeechSynthesis = speechSynthesis || window.speechSynthesis;
@@ -12,6 +8,10 @@ export class LoaderService {
     this.getVoices();
   }
 
+  /**
+   *
+   * @returns Speech synthesis and array of voices.
+   */
   getSynthAndVoices(): SynthAndVoices {
     return { synth: this.synth, voices: this.voices || [] };
   }

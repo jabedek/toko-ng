@@ -23,13 +23,16 @@ export interface RecognitionLanguage {
   name?: string;
 }
 
+export interface RecognitionResultSnapshot {
+  transcript: string;
+  confidence: string;
+  isFinal: boolean;
+}
+
 export interface RecognitionProcessMessage extends ProcessMessage {
   elapsedTime: string | number;
-  topResult?: {
-    transcript?: string;
-    confidence?: string;
-    isFinal?: boolean;
-  };
+  // topResult?: RecognitionResultSnapshot;
+  topResultsSoFar?: RecognitionResultSnapshot[];
 }
 
 export interface SpeechRecognition extends EventTarget {
@@ -64,7 +67,13 @@ export interface SpeechGrammarList {
   item(index: number): SpeechGrammar;
   [index: number]: SpeechGrammar;
   addFromURI(src: string, weight: number): void;
-  addFromString(string: string, weight: number): void;
+
+  /**
+   *
+   * @param string A DOMString representing the grammar to be added.
+   * @param weight A float representing the weight of the grammar relative to other grammars present in the SpeechGrammarList. The weight means the importance of this grammar, or the likelihood that it will be recognized by the speech recognition service. The value can be between 0.0 and 1.0; If not specified, the default used is 1.0.
+   */
+  addFromString(string: string, weight?: number): void;
 }
 
 interface SpeechGrammar {
@@ -97,12 +106,9 @@ export interface SpeechRecognitionEvent extends Event {
   emma: Document;
 }
 // Event handling
-export type RecognitionEvent =
-  | Event
-  | SpeechRecognitionEvent
-  | SpeechRecognitionErrorEvent;
+export type RecognitionEvent = Event | SpeechRecognitionEvent | SpeechRecognitionErrorEvent;
 
-export enum SpeechRecognitionEventTypes {
+export enum SpeechRecognitionEventType {
   start = 'start',
   end = 'end',
   audioend = 'audioend',
@@ -116,18 +122,18 @@ export enum SpeechRecognitionEventTypes {
   result = 'result',
 }
 
-export type SpeechRecognitionEventType =
-  | 'start'
-  | 'end'
-  | 'audioend'
-  | 'audiostart'
-  | 'soundend'
-  | 'soundstart'
-  | 'speechend'
-  | 'speechstart'
-  | 'error'
-  | 'nomatch'
-  | 'result';
+// export type SpeechRecognitionEventType =
+//   | 'start'
+//   | 'end'
+//   | 'audioend'
+//   | 'audiostart'
+//   | 'soundend'
+//   | 'soundstart'
+//   | 'speechend'
+//   | 'speechstart'
+//   | 'error'
+//   | 'nomatch'
+//   | 'result';
 
 // from lib
 export interface SpeechRecognitionEventMap {

@@ -1,7 +1,7 @@
-import { RecognitionState } from '../shared/models/recognition.model';
-import { SynthesisState } from '../shared/models/synthesis.model';
+// import { RecognitionState } from '../shared/models/recognition.model';
+// import { SynthesisState } from '../shared/models/synthesis.model';
 
-export interface AppState {
-  synthesis: SynthesisState;
-  recognition: RecognitionState;
-}
+// export interface AppState {
+//   synthesis: SynthesisState;
+//   recognition: RecognitionState;
+// }

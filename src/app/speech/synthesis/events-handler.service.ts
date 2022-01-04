@@ -1,48 +1,37 @@
-import { Injectable } from '@angular/core';
 import * as moment from 'moment';
 import { Observable, Subject } from 'rxjs';
+import { NextEventFn } from 'src/app/shared/models/shared.models';
 import {
   SpeechSynthesisUtteranceEventType,
-  // SpeechSynthesisUtteranceEventType,
   SynthesisEvent,
   SynthesisProcessMessage,
+  UtteranceListenerDetacher,
 } from 'src/app/shared/models/synthesis.model';
-import {
-  attachSynthUtteranceListeners,
-  detachSynthUtteranceListeners,
-  logBoundaryEvent,
-} from './utils/speech-synthesis-events.utils';
+import { UTTERANCE_ONLY_EVENTS } from './synthesis.constants';
 import { roundToTwo } from './utils/utils';
 
-@Injectable({
-  providedIn: 'root',
-})
 export class EventsHandlerService {
   private eventSubject: Subject<SynthesisEvent> = new Subject();
   events$: Observable<SynthesisEvent> = this.eventSubject.asObservable();
 
   getUtteranceWithHandlers(text: string = ''): SpeechSynthesisUtterance {
-    const newUtterance: SpeechSynthesisUtterance | undefined | null =
-      attachSynthUtteranceListeners(
-        new SpeechSynthesisUtterance(text),
-        detachSynthUtteranceListeners,
-        (event: SynthesisEvent) => this.eventSubject.next(event)
-      );
+    const newUtterance: SpeechSynthesisUtterance | undefined | null = this.attachListeners(
+      new SpeechSynthesisUtterance(text),
+      this.detachListeners,
+      (event: SynthesisEvent) => this.eventSubject.next(event)
+    );
 
     return newUtterance;
   }
 
-  resolveEvent(
-    event: SynthesisEvent,
-    utterance: SpeechSynthesisUtterance | undefined
-  ) {
+  resolveEvent(event: SynthesisEvent, utterance: SpeechSynthesisUtterance | undefined) {
     if (!utterance) {
       utterance = this.getUtteranceWithHandlers();
     }
 
     const elapsedTimeMS = (event as any).elapsedTime as number;
     const processMessage: SynthesisProcessMessage = {
-      date: moment().format('yyyy-mm-DD HH:mm:ss'),
+      date: moment().format('yyyy-MM-DD HH:mm:ss'),
       eventType: event.type,
       elapsedTime: roundToTwo(elapsedTimeMS / 1000),
     };
@@ -52,7 +41,7 @@ export class EventsHandlerService {
         break;
       case SpeechSynthesisUtteranceEventType.boundary:
         processMessage.name = (event as SpeechSynthesisEvent).name;
-        logBoundaryEvent(event as SpeechSynthesisEvent);
+        this.logBoundaryEvent(event as SpeechSynthesisEvent);
         break;
       case SpeechSynthesisUtteranceEventType.error:
         break;
@@ -63,11 +52,40 @@ export class EventsHandlerService {
       case SpeechSynthesisUtteranceEventType.resume:
         break;
       case SpeechSynthesisUtteranceEventType.end:
-        detachSynthUtteranceListeners(utterance);
+        //  this.detachListeners(utterance);
+        utterance = this.detachListeners(utterance);
 
         break;
     }
 
     return { utterance, processMessage };
+  }
+
+  private attachListeners(
+    target: SpeechSynthesisUtterance,
+    detachListenersFn: UtteranceListenerDetacher,
+    nextEventFn: NextEventFn
+  ): SpeechSynthesisUtterance {
+    const newUtterance = detachListenersFn(target) as any;
+    UTTERANCE_ONLY_EVENTS.forEach(
+      (eventType) =>
+        (newUtterance[`on${eventType as SpeechSynthesisUtteranceEventType}`] = (event: Event) => {
+          nextEventFn(event);
+        })
+    );
+
+    return newUtterance;
+  }
+
+  private detachListeners(target: SpeechSynthesisUtterance): SpeechSynthesisUtterance {
+    const newUtterance = target as any;
+
+    UTTERANCE_ONLY_EVENTS.forEach((eventType) => (newUtterance[`on${eventType}`] = undefined));
+
+    return newUtterance;
+  }
+
+  private logBoundaryEvent(event: SpeechSynthesisEvent) {
+    console.log((event.name as string).toUpperCase() + ' boundary reached after ' + roundToTwo(event.elapsedTime as number) + ' ms.');
   }
 }

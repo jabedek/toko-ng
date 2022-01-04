@@ -1,4 +1,13 @@
 export function roundToTwo(num: any): string {
-  // return +(Math.round((num + 'e+2') as any) + 'e-2');
-  return (Math.round(num * 100) / 100).toFixed(2);
+  let numFormatted = (Math.round(num * 100) / 100).toFixed(2);
+  // console.log(numFormatted);
+
+  if (numFormatted.length === 4) {
+    numFormatted = '000' + numFormatted;
+  } else if (numFormatted.length === 5) {
+    numFormatted = '00' + numFormatted;
+  } else if (numFormatted.length === 6) {
+    numFormatted = '0' + numFormatted;
+  }
+  return numFormatted;
 }

@@ -6,23 +6,18 @@ export function getTopResultFromResults(
     .map((result: SpeechRecognitionResult) => {
       return { alternative: result[0], isFinal: result.isFinal };
     })
-    .map(
-      (result: {
-        alternative: SpeechRecognitionAlternative;
-        isFinal: boolean;
-      }) => {
-        let transcript = result.alternative.transcript;
-        if (transcript.includes('c***')) {
-          transcript = 'chuj';
-        }
-
-        return {
-          transcript,
-          confidence: result.alternative.confidence.toString().substr(0, 5),
-          isFinal: result.isFinal,
-        };
+    .map((result: { alternative: SpeechRecognitionAlternative; isFinal: boolean }) => {
+      let transcript = result.alternative.transcript;
+      if (transcript.includes('c***')) {
+        transcript = 'chuj';
       }
-    );
+
+      return {
+        transcript,
+        confidence: result.alternative.confidence.toString().substr(0, 5),
+        isFinal: result.isFinal,
+      };
+    });
 }
 
 export function getTopTranscript(results: SpeechRecognitionResultList): string {
@@ -38,10 +33,10 @@ export function getTopTranscript(results: SpeechRecognitionResultList): string {
 [line]: public <term> - public declares that it is a public rule, the string in angle brackets defines the recognised name for this term (term).
 [line]: ' + terms.join(' | ') + ' - alternative values that will be recognised and accepted as appropriate values for the term.
 */
-export function getGrammar(termsList: string[]): string {
-  const terms = termsList || ['pies', 'kot', 'jeż'];
-  const grammar =
-    '#JSGF V1.0; grammar terms; public <terms> = ' + terms.join(' | ') + ' ;';
+// export function getGrammar(termsList: string[]): string {
+//   const terms = termsList || ['pies', 'kot', 'jeż'];
+//   const grammar =
+//     '#JSGF V1.0; grammar terms; public <terms> = ' + terms.join(' | ') + ' ;';
 
-  return grammar;
-}
+//   return grammar;
+// }

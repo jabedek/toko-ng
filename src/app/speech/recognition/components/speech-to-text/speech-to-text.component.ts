@@ -1,19 +1,8 @@
-import { DEFAULT_RECOGNITION_LANGUAGES } from './../../assets/languages';
-import { Subject, Observable } from 'rxjs';
-import {
-  RecognitionLanguage,
-  RecognitionSelected,
-  SpeechRecognitionEventType,
-} from './../../../../shared/models/recognition.model';
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  ViewChild,
-  ElementRef,
-  AfterViewChecked,
-} from '@angular/core';
+import { Subject } from 'rxjs';
+import { RecognitionSelected, SpeechRecognitionEventType } from './../../../../shared/models/recognition.model';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { RecogService2 } from '../../recognition-2.service';
+import { takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-speech-to-text',
@@ -21,44 +10,38 @@ import { RecogService2 } from '../../recognition-2.service';
   styleUrls: ['./speech-to-text.component.scss'],
   providers: [],
 })
-export class SpeechToTextComponent
-  implements OnInit, OnDestroy, AfterViewChecked
-{
+export class SpeechToTextComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messagesEl') messagesEl: ElementRef | undefined;
 
-  // Defaults
-  langs$: Observable<RecognitionLanguage[]> | undefined;
+  speechState: SpeechRecognitionEventType | undefined;
+  params: RecognitionSelected | undefined = undefined;
+  userPaused = false;
 
-  state: SpeechRecognitionEventType | undefined;
+  get termsToFind() {
+    return this.params?.terms.join(', ') || '';
+  }
 
-  // Selected (initial values)
-  selected: RecognitionSelected = {
-    lang: undefined,
-    interimResults: true,
-    maxAlternatives: 5,
-    terms: ['hej', 'cześć', 'test'],
-    grammar: '',
-    continuous: true,
-  };
-
-  termsToFind = 'hej, cześć, test';
-
+  set termsToFind(val: string) {
+    if (this.params) {
+      this.params.terms = this.textToTerms(val);
+    }
+  }
   // other
   private destroy$: Subject<void> = new Subject();
 
   constructor(public service: RecogService2) {
-    this.subscribeRecogSelected();
-
-    this.langs$ = this.service.langs$;
-    this.service.updateSelected(
-      'lang',
-      DEFAULT_RECOGNITION_LANGUAGES.find((l) => l.langCode.includes('pl'))
-    );
+    this.service.recognitionLoadedSub$.pipe(takeWhile((v) => v)).subscribe((loaded) => {
+      if (loaded) {
+        this.params = {
+          ...this.service.getDefaultParams(),
+        };
+      }
+    });
   }
 
   ngOnInit(): void {
     this.service.speechStateSubect.subscribe((s) => {
-      this.state = s;
+      this.speechState = s;
       this.scrollToBottom();
     });
   }
@@ -72,48 +55,31 @@ export class SpeechToTextComponent
     this.destroy$.complete();
   }
 
-  scrollToBottom(): void {
-    if (this.messagesEl) {
-      this.messagesEl.nativeElement.scrollTop =
-        this.messagesEl.nativeElement.scrollHeight;
+  listen() {
+    this.userPaused = false;
+    if (this.params) {
+      this.service.listen(this.params);
     }
   }
 
-  listen() {
-    this.service.listen();
-  }
-
   stop() {
+    this.userPaused = true;
     this.service.stop();
   }
 
-  updateSelected(
-    key: 'lang' | 'interimResults' | 'terms' | 'grammar' | 'continuous'
-  ) {
-    console.log('speech to text2');
+  updateSelected(key: 'lang' | 'interimResults' | 'terms' | 'grammar' | 'continuous') {}
 
-    let value: any =
-      key === 'terms' ? this.textToWords(this.termsToFind) : this.selected[key];
-
-    this.service.updateSelected(key, value);
+  private scrollToBottom(): void {
+    if (this.messagesEl) {
+      this.messagesEl.nativeElement.scrollTop = this.messagesEl.nativeElement.scrollHeight;
+    }
   }
 
-  subscribeRecogSelected() {
-    this.service.selected$.subscribe((data) => {
-      this.selected.interimResults = data.interimResults;
-      this.selected.lang = data.lang;
-    });
-  }
-
-  textToWords(text: string) {
+  private textToTerms(text: string) {
     const whitespacesTest = /\s*/gm;
     const specialSymbolsTest = /[\.]*[\-]*[\+]*[\/]*/gm;
-    let words = text
-      .replace(',,', ',')
-      .replace(specialSymbolsTest, '')
-      .replace(whitespacesTest, '')
-      .split(',');
+    const terms = text.replace(',,', ',').replace(specialSymbolsTest, '').replace(whitespacesTest, '').split(',');
 
-    return words;
+    return terms;
   }
 }
