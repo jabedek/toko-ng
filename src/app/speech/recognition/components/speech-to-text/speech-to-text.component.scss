@@ -174,6 +174,19 @@
   border-bottom: 1px solid grey;
   padding: 4px;
 
+  &--STOPPED {
+    border-bottom: 4px solid grey;
+    text-transform: uppercase;
+
+    .message__type {
+      background: white;
+      color: black;
+      border-radius: 0.2rem;
+      width: 110px;
+      padding: 1px 2px;
+    }
+  }
+
   &__date {
     padding: 0 0.4rem;
     flex-shrink: 0;

@@ -13,7 +13,7 @@ import { takeWhile } from 'rxjs/operators';
 export class SpeechToTextComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messagesEl') messagesEl: ElementRef | undefined;
 
-  speechState: SpeechRecognitionEventType | undefined;
+  speechState: SpeechRecognitionEventType | undefined = undefined;
   params: RecognitionSelected | undefined = undefined;
   userPaused = false;
 
@@ -64,6 +64,7 @@ export class SpeechToTextComponent implements OnInit, OnDestroy, AfterViewChecke
 
   stop() {
     this.userPaused = true;
+    this.speechState = undefined;
     this.service.stop();
   }
 

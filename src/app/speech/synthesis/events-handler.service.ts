@@ -8,7 +8,7 @@ import {
   UtteranceListenerDetacher,
 } from 'src/app/shared/models/synthesis.model';
 import { UTTERANCE_ONLY_EVENTS } from './synthesis.constants';
-import { roundToTwo } from './utils/utils';
+import { roundToTwo } from '../../shared/utils/utils';
 
 export class EventsHandlerService {
   private eventSubject: Subject<SynthesisEvent> = new Subject();
@@ -24,11 +24,7 @@ export class EventsHandlerService {
     return newUtterance;
   }
 
-  resolveEvent(event: SynthesisEvent, utterance: SpeechSynthesisUtterance | undefined) {
-    if (!utterance) {
-      utterance = this.getUtteranceWithHandlers();
-    }
-
+  createProcessMessage(event: SynthesisEvent): SynthesisProcessMessage {
     const elapsedTimeMS = (event as any).elapsedTime as number;
     const processMessage: SynthesisProcessMessage = {
       date: moment().format('yyyy-MM-DD HH:mm:ss'),
@@ -36,6 +32,15 @@ export class EventsHandlerService {
       elapsedTime: roundToTwo(elapsedTimeMS / 1000),
     };
 
+    return processMessage;
+  }
+
+  resolveEvent(event: SynthesisEvent, utterance: SpeechSynthesisUtterance | undefined) {
+    if (!utterance) {
+      utterance = this.getUtteranceWithHandlers();
+    }
+
+    const processMessage: SynthesisProcessMessage = this.createProcessMessage(event);
     switch (event.type) {
       case SpeechSynthesisUtteranceEventType.start:
         break;

@@ -1,6 +1,6 @@
 export function roundToTwo(num: any): string {
   let numFormatted = (Math.round(num * 100) / 100).toFixed(2);
-  // console.log(numFormatted);
+  console.log(num, numFormatted);
 
   if (numFormatted.length === 4) {
     numFormatted = '000' + numFormatted;

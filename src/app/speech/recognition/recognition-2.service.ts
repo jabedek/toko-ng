@@ -2,16 +2,12 @@ import {
   RecognitionEvent,
   RecognitionProcessMessage,
   RecognitionLanguage,
-  RecognitionDefaults,
   RecognitionSelected,
   SpeechRecognitionEventType,
 } from './../../shared/models/recognition.model';
 import { takeUntil } from 'rxjs/operators';
-// import { selectRecognitionLangs, selectRecognitionSelected, selectRecognitionDefaults } from './state/recognition.selectors';
-// import { AppState } from 'src/app/app-state/app-state.model';
-import { Injectable, ChangeDetectorRef, ApplicationRef } from '@angular/core';
-import { Store } from '@ngrx/store';
-import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { Injectable, ApplicationRef } from '@angular/core';
+import { ReplaySubject, Subject } from 'rxjs';
 import { LoaderService } from './loader.service';
 import { EventsHandlerService } from './events-handler.service';
 import { DEFAULT_RECOGNITION_LANGUAGES } from './assets/languages';
@@ -23,41 +19,32 @@ const SpeechGrammarList = webkitSpeechGrammarList;
 
 type SpeechRecognition = typeof SpeechRecognition;
 
+/**
+ * ON FIREFOX:
+ * Go to about:config and switch the flags media.webspeech.recognition.enable and media.webspeech.recognition.force_enable to true.
+ */
+
 @Injectable({
   providedIn: 'root',
 })
 export class RecogService2 {
   eventSubject: Subject<RecognitionEvent> = new Subject();
   speechStateSubect: Subject<SpeechRecognitionEventType> = new Subject();
-
   isStoppedSpeechRecog = false;
   isListening = false;
   foundWords = '';
   textDisplayed = '';
   tempWords = '';
-  startedAt = 0;
-
+  // startedAt = 0;
   topResults: any[] = [];
-
   processMessages: RecognitionProcessMessage[] = [];
-
-  // langs$: Observable<RecognitionLanguage[]> = this.store.select(selectRecognitionLangs);
   langs: RecognitionLanguage[] = DEFAULT_RECOGNITION_LANGUAGES;
-
-  // other
-  private destroy$: Subject<void> = new Subject();
-  // private eventsSubs: RecogEventsSubscriptions[] = [];
-
   recog: SpeechRecognition | undefined;
   grammar: SpeechGrammarList | undefined;
   recognitionLoadedSub$: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
+  private destroy$: Subject<void> = new Subject();
 
-  constructor(
-    // private store: Store<AppState>,
-    public ref: ApplicationRef,
-    private loader: LoaderService,
-    private eventsHandler: EventsHandlerService
-  ) {
+  constructor(public ref: ApplicationRef, private loader: LoaderService, private eventsHandler: EventsHandlerService) {
     this.init();
   }
 
@@ -92,11 +79,7 @@ export class RecogService2 {
 
   private subscribeEventsStream(): void {
     this.eventsHandler.events$.pipe(takeUntil(this.destroy$)).subscribe((event: RecognitionEvent) => {
-      // console.log('#', event);
-
-      const { recog, processMessage } = this.eventsHandler.resolveEvent(event, this.recog);
-      this.recog = recog;
-      console.log(this.recog);
+      const { processMessage } = this.eventsHandler.resolveEvent(event, this.recog);
 
       this.processMessages.push(processMessage);
 
@@ -109,178 +92,24 @@ export class RecogService2 {
     });
   }
 
-  // Get configured SpeechRecognition object.
-  // private configRecognition(
-  //   recognition: SpeechRecognition,
-  //   selected: RecognitionSelected
-  // ): SpeechRecognition {
-  //   if (recognition && selected) {
-  //     recognition.lang = selected.lang?.langCode || 'pl';
-  //     recognition.interimResults = selected.interimResults;
-  //     recognition.maxAlternatives =
-  //   terms: '',selected.maxAlternatives;
-
-  //  terms: '', //   }
-  //   const terms = this.selected?.terms || ['hej', 'cześć', 'test'];
-  //   const grammar: string = this.selected?.grammar || getGrammar(terms);
-
-  //   /* Plug the grammar into speech recognition and configure few other properties */
-  //   let speechRecognitionList = new SpeechGrammarList();
-  //   speechRecognitionList.addFromString(grammar, 1);
-
-  //   recognition.grammars = speechRecognitionList;
-  //   // recognition = this.
-
-  //   // this.store.dispatch(setSelectedTerms({ terms }));
-  //   // this.store.dispatch(setSelectedGrammar({ grammar }));
-  //   // this.store.dispatch(loadRecognition({ recognition }));
-
-  //   return recognition;
-  // }
-
-  // // Event handling
-  // attachRecogListeners(
-  //   target: SpeechRecognition,
-  //   detachListenersFn: (target: SpeechRecognition) => SpeechRecognition
-  // ): SpeechRecognition {
-  //   const newRecognition = detachListenersFn(target) as any;
-  //   RECOG_EVENTS.forEach(
-  //     (eventType) =>
-  //       (newRecognition[`on${eventType}`] = (event: Event) => {
-  //         this.nextEvent(event);
-  //       })
-  //   );
-
-  //   return newRecognition;
-  // }
-
-  // detachRecogListeners(target: SpeechRecognition): SpeechRecognition {
-  //   const newRecognition = target as any;
-  //   RECOG_EVENTS.forEach((event) => (newRecognition[`on${event}`] = undefined));
-
-  //   return newRecognition;
-  // }
-
-  // nextEvent = (event: RecognitionEvent) => {
-  //   this.eventSubject.next(event);
-  // };
-
-  // dispatchEventHandle(event: RecognitionEvent) {
-  //   const elapsedTimeMS = Date.now() - this.startedAt;
-  //   const processMessage: RecognitionProcessMessage = {
-  //     date: moment().format('yyyy-MM-DD HH:mm:ss'),
-  //     eventType: event.type,
-  //     elapsedTime: roundToTwo(elapsedTimeMS / 1000),
-  //   };
-
-  //   switch (event.type) {
-  //     case SpeechRecognitionEventTypes.start:
-  //       break;
-  //     case SpeechRecognitionEventTypes.audiostart:
-  //       break;
-  //     case SpeechRecognitionEventTypes.soundstart:
-  //       break;
-  //     case SpeechRecognitionEventTypes.speechstart:
-  //       break;
-  //     case SpeechRecognitionEventTypes.nomatch:
-  //       break;
-  //     case SpeechRecognitionEventTypes.result:
-  //       const { transcript, confidence, isFinal } = getTopResultFromResults(
-  //         (event as SpeechRecognitionEvent).results
-  //       )[0];
-  //       processMessage.topResult = {
-  //         transcript,
-  //         confidence,
-  //         isFinal,
-  //       };
-
-  //       this.handleResult(transcript);
-  //       break;
-  //     case SpeechRecognitionEventTypes.error:
-  //       processMessage.error = (event as SpeechRecognitionErrorEvent).error;
-  //       break;
-  //     case SpeechRecognitionEventTypes.speechend:
-  //       break;
-  //     case SpeechRecognitionEventTypes.soundend:
-  //       break;
-  //     case SpeechRecognitionEventTypes.audioend:
-  //       break;
-  //     case SpeechRecognitionEventTypes.end:
-  //       this.handleEnd(event);
-  //       break;
-  //   }
-
-  //   this.speechStateSubect.next(event.type as SpeechRecognitionEventType);
-  //   this.processMessages.push(processMessage);
-  //   this.ref.tick(); // update component from here (instead of standard CDR)
-
-  // console.log(this.processMessages);
-  // }
-
-  // private handleEnd = (event: Event) => {
-  //   if (this.isStoppedSpeechRecog) {
-  //     this.recognition?.stop();
-  //   } else {
-  //     this.foundWordConcat();
-  //     this.tempWords = '';
-  //     this.recognition?.start();
-  //   }
-  // };
-
-  // private handleResult = (result: string) => {
-  //   this.tempWords = result;
-  //   this.textDisplayed = result;
-  //   this.foundWordConcat();
-  // };
-
-  // Store communication
-  // updateSelected(key: string, value: any) {
-  //   switch (key) {
-  //     case 'lang':
-  //       this.store.dispatch(setSelectedLang({ lang: value }));
-  //       break;
-  //     case 'interimResults':
-  //       this.store.dispatch(
-  //         setSelectedInterimResults({ interimResults: value })
-  //       );
-  //       break;
-  //   }
-  // }
-
-  // private subscribeToStore() {
-  //   this.langs$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
-  //     this.langs = d;
-  //   });
-
-  //   this.selected$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
-  //     this.selected = d;
-  //   });
-
-  //   this.defaults$.pipe(takeUntil(this.destroy$)).subscribe((d) => {
-  //     this.defaults = d;
-  //   });
-  // }
-
-  // UI/Feature functionality
   listen(params: RecognitionSelected) {
     this.stop();
     this.prepareRecognition(params);
-    this.startedAt = Date.now();
+    // this.startedAt = Date.now();
     this.processMessages = [];
     if (!this.isListening) {
       this.recog?.start();
       this.isListening = true;
       this.isStoppedSpeechRecog = false;
-      // console.log('Speech recognition started');
     }
   }
 
   stop() {
     this.isListening = false;
     this.isStoppedSpeechRecog = true;
-    // this.foundWordConcat();
+    this.recog = this.eventsHandler.detachListeners(this.recog);
     this.recog?.stop();
-    // console.log('End speech recognition');
+    this.processMessages.push(this.eventsHandler.createProcessMessage('STOPPED'));
   }
 
   private prepareRecognition(params: RecognitionSelected) {
@@ -294,14 +123,6 @@ export class RecogService2 {
     this.recog.interimResults = params.interimResults;
     this.recog.maxAlternatives = params.maxAlternatives;
     this.recog.continuous = params.continuous;
-  }
-
-  // helpers
-  private foundWordConcat() {
-    this.foundWords = this.foundWords + ' ' + this.tempWords + '.';
-    console.log(this.foundWords);
-
-    this.tempWords = '';
   }
 
   /**

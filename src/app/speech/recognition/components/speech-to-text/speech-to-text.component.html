@@ -43,7 +43,7 @@
         <span class="current-event">{{ speechState ? speechState : "" }}</span>
       </label>
       <ul class="process-messages" #messagesEl>
-        <li *ngFor="let message of service.processMessages" class="message">
+        <li *ngFor="let message of service.processMessages" class="message message--{{ message.eventType }}">
           <div class="message-top">
             <section class="message__top-section">
               <span class="message__type">

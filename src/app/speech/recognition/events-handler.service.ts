@@ -10,20 +10,18 @@ import {
   SpeechRecognitionEventType,
 } from 'src/app/shared/models/recognition.model';
 import { NextEventFn } from 'src/app/shared/models/shared.models';
-import { roundToTwo } from '../synthesis/utils/utils';
+import { roundToTwo } from '../../shared/utils/utils';
 import { RECOG_EVENTS } from './recognition.constants';
 
 @Injectable({
   providedIn: 'root',
 })
 export class EventsHandlerService {
-  // processMessages: RecognitionProcessMessage[] = [];
   isStoppedSpeechRecog = false;
   isListening = false;
   foundWords = '';
   textDisplayed = '';
   tempWords = '';
-
   private startedAt = 0;
   private eventSubject: Subject<RecognitionEvent> = new Subject();
   events$: Observable<RecognitionEvent> = this.eventSubject.asObservable();
@@ -32,21 +30,26 @@ export class EventsHandlerService {
 
   getRecogWithHandlers(target: SpeechRecognition): SpeechRecognition {
     const newRecog = this.attachRecogListeners(target, this.detachListeners, (event: RecognitionEvent) => this.eventSubject.next(event));
-    // console.log('getRecogWithHandlers');
-
+    this.startedAt = Date.now();
     return newRecog;
   }
 
-  resolveEvent(event: RecognitionEvent, recog: SpeechRecognition) {
-    // console.log('resolveEvent');
+  createProcessMessage(eventType: string): RecognitionProcessMessage {
+    const elapsedTimeMS = Math.abs(Date.now() - this.startedAt);
+    console.log(elapsedTimeMS);
 
-    const elapsedTimeMS = Date.now() - this.startedAt;
     const processMessage: RecognitionProcessMessage = {
       date: moment().format('yyyy-MM-DD HH:mm:ss'),
-      eventType: event.type,
+      eventType: eventType,
       elapsedTime: roundToTwo(elapsedTimeMS / 1000),
       topResultsSoFar: [],
     };
+
+    return processMessage;
+  }
+
+  resolveEvent(event: RecognitionEvent, recog: SpeechRecognition) {
+    const processMessage: RecognitionProcessMessage = this.createProcessMessage(event.type);
 
     switch (event.type) {
       case SpeechRecognitionEventType.start:
@@ -61,7 +64,6 @@ export class EventsHandlerService {
         break;
       case SpeechRecognitionEventType.result:
         processMessage.topResultsSoFar = this.getTopResultFromResults((event as SpeechRecognitionEvent).results).filter((r) => r.isFinal);
-
         break;
       case SpeechRecognitionEventType.error:
         processMessage.error = (event as SpeechRecognitionErrorEvent).error;
@@ -73,13 +75,12 @@ export class EventsHandlerService {
       case SpeechRecognitionEventType.audioend:
         break;
       case SpeechRecognitionEventType.end:
-        // recog = this.detachListeners(recog);
-        // recog?.start();
+        recog?.start();
 
         break;
     }
 
-    return { recog, processMessage };
+    return { processMessage };
   }
 
   private attachRecogListeners(
@@ -98,7 +99,7 @@ export class EventsHandlerService {
     return newRecognition;
   }
 
-  private detachListeners(target: SpeechRecognition): SpeechRecognition {
+  detachListeners(target: SpeechRecognition): SpeechRecognition {
     const newRecognition = target;
     RECOG_EVENTS.forEach((event) => ((newRecognition as any)[`on${event}`] = undefined));
 
@@ -106,16 +107,12 @@ export class EventsHandlerService {
   }
 
   private getTopResultFromResults(results: SpeechRecognitionResultList): RecognitionResultSnapshot[] {
-    // console.log(results);
-
     return Array.from(results)
       .map((result: SpeechRecognitionResult) => {
         return { alternative: result[0], isFinal: result.isFinal };
       })
       .map((topResult: { alternative: SpeechRecognitionAlternative; isFinal: boolean }) => {
-        // console.log(topResult);
-
-        // tu powinno sie odszukac probe cenzury posrod alternatyw - np dla 'chuj' jest 'c***' wiec mozna zamienic
+        // TODO: tu powinno sie odszukac probe cenzury posrod alternatyw - np dla 'chuj' jest 'c***' wiec mozna zamienic
         let transcript = topResult.alternative.transcript;
         if (transcript.includes('c***')) {
           transcript = 'chuj';
