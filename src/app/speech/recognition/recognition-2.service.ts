@@ -12,6 +12,7 @@ import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { LoaderService } from './loader.service';
 import { EventsHandlerService } from './events-handler.service';
 import { DEFAULT_RECOGNITION_LANGUAGES } from './constants/languages.constant';
+import { specialSymbolsTest, whitespacesTest } from 'src/app/shared/regexp/regexp';
 
 declare var webkitSpeechRecognition: any;
 declare var webkitSpeechGrammarList: any;
@@ -29,8 +30,8 @@ type SpeechRecognition = typeof SpeechRecognition;
 })
 export class RecogService2 {
   processMessages: RecognitionProcessMessage[] = [];
-  processMessagesObj: { [key: string]: RecognitionProcessMessage } = {};
-  results: RecognitionResultSnapshot[] = [];
+  // processMessagesObj: { [key: string]: RecognitionProcessMessage } = {};
+  // results: RecognitionResultSnapshot[] = [];
   resultsObj: { [key: string]: RecognitionResultSnapshot } = {};
   langs: RecognitionLanguage[] = DEFAULT_RECOGNITION_LANGUAGES;
 
@@ -43,6 +44,11 @@ export class RecogService2 {
   private recog: SpeechRecognition | undefined;
   private destroy$: Subject<void> = new Subject();
 
+  skipUntilSaid = {
+    phrase: 'okej toko',
+    hasBeenSaid: false,
+  };
+
   constructor(public ref: ApplicationRef, private loader: LoaderService, private eventsHandler: EventsHandlerService) {
     this.init();
   }
@@ -53,7 +59,7 @@ export class RecogService2 {
   }
 
   getDefaultParams(): RecognitionSelected {
-    const terms = ['test', 'lol', 'yeti'];
+    const terms = ['okej', 'toko', 'okej toko', 'test', 'lol', 'yeti'];
 
     return {
       continuous: true,
@@ -80,15 +86,91 @@ export class RecogService2 {
       const { processMessage, topResultsSoFar } = this.eventsHandler.resolveEvent(event, this.recog);
 
       this.processMessages.push(processMessage);
-      this.processMessagesObj[processMessage.date] = { ...processMessage };
-      this.results = topResultsSoFar;
       topResultsSoFar.forEach((r) => {
-        this.resultsObj[r.date] = { ...r };
+        const startPhrase = this.checkIfStartPhrase(r.transcript);
+
+        if (this.skipUntilSaid.hasBeenSaid === true) {
+          this.resultsObj[r.date] = { ...r };
+        }
+
+        if (startPhrase) {
+          this.skipUntilSaid.hasBeenSaid = true;
+          return;
+        }
       });
 
       this.speechStateSub.next(event.type as SpeechRecognitionEventType);
       this.ref.tick(); // update component from here (instead of standard CDR)
     });
+  }
+
+  checkIfStartPhrase(phraseA: string) {
+    const phraseB = this.skipUntilSaid.phrase;
+    const equal = this.checkPhrasesEquality(phraseA, phraseB);
+    const similar = this.checkPhrasesSimilarity(phraseA, phraseB);
+
+    console.log(equal, similar);
+
+    return equal || similar >= 0.8;
+  }
+
+  /**
+   * Checks whether phrases are equal (after normalization and deleting ALL whitespaces)
+   */
+  private checkPhrasesEquality(phraseA: string, phraseB: string) {
+    phraseA = this.normalizePhrase(phraseA).replace(whitespacesTest, '');
+    phraseB = this.normalizePhrase(phraseB).replace(whitespacesTest, '');
+    console.log(phraseA, phraseB);
+
+    const exactlyEqual = phraseA === phraseB;
+
+    return exactlyEqual;
+  }
+
+  private checkPhrasesSimilarity(phraseA: string, phraseB: string) {
+    let longer = phraseA;
+    let shorter = phraseB;
+    if (phraseA.length < phraseB.length) {
+      longer = phraseB;
+      shorter = phraseA;
+    }
+    const longerLength = longer.length;
+    if (longerLength === 0) {
+      return 1.0;
+    }
+    return (longerLength - this.editDistance(longer, shorter)) / parseFloat('' + longerLength);
+  }
+
+  private editDistance(phraseA: string, phraseB: string) {
+    phraseA = phraseA.toLowerCase();
+    phraseB = phraseB.toLowerCase();
+
+    const costs = new Array();
+    for (let i = 0; i <= phraseA.length; i++) {
+      let lastValue = i;
+      for (let j = 0; j <= phraseB.length; j++) {
+        if (i === 0) costs[j] = j;
+        else {
+          if (j > 0) {
+            let newValue = costs[j - 1];
+            if (phraseA.charAt(i - 1) != phraseB.charAt(j - 1)) newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+            costs[j - 1] = lastValue;
+            lastValue = newValue;
+          }
+        }
+      }
+      if (i > 0) costs[phraseB.length] = lastValue;
+    }
+    return costs[phraseB.length];
+  }
+
+  /**
+   * Replaces all special symbols and multiple whitespaces with single whitespace
+   * @param phrase Phrase to normalize
+   * @returns
+   */
+  private normalizePhrase(phrase: string) {
+    return phrase.toLocaleLowerCase().replace(specialSymbolsTest, ' ').replace(whitespacesTest, ' ');
   }
 
   listen(params: RecognitionSelected) {
@@ -107,6 +189,8 @@ export class RecogService2 {
     this.recog?.stop();
     this.processMessages.push(this.eventsHandler.createProcessMessage(SpeechRecognitionEventType.STOPPED).processMessage);
   }
+
+  findPattern() {}
 
   private prepareRecognition(params: RecognitionSelected) {
     /* Plug the grammar into speech recognition and configure few other properties */
@@ -136,6 +220,7 @@ export class RecogService2 {
    * @returns A DOMString representing the grammar to be added.
    */
   private getGrammar(terms: string[]): string {
+    terms.push('okej', 'toko', 'okej toko');
     const grammar = '#JSGF V1.0; grammar terms; public <terms> = ' + terms.join(' | ') + ' ;';
     return grammar;
   }

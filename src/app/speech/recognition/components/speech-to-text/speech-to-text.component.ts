@@ -3,6 +3,7 @@ import { RecognitionSelected, SpeechRecognitionEventType } from './../../../../s
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { RecogService2 } from '../../recognition-2.service';
 import { takeWhile } from 'rxjs/operators';
+import { specialSymbolsTest, whitespacesTest } from 'src/app/shared/regexp/regexp';
 
 @Component({
   selector: 'app-speech-to-text',
@@ -79,8 +80,6 @@ export class SpeechToTextComponent implements OnInit, OnDestroy, AfterViewChecke
   }
 
   private textToTerms(text: string) {
-    const whitespacesTest = /\s*/gm;
-    const specialSymbolsTest = /[\.]*[\-]*[\+]*[\/]*/gm;
     const terms = text.replace(',,', ',').replace(specialSymbolsTest, '').replace(whitespacesTest, '').split(',');
 
     return terms;
