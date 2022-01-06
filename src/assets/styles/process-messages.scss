@@ -1,0 +1,123 @@
+%process-messages {
+  margin: 6px 0;
+  border: 1px solid grey;
+  border-radius: 0.1rem;
+  height: 100%;
+  overflow: scroll;
+  overflow-x: hidden;
+  width: 100%;
+  .timings,
+  .contents {
+    display: flex;
+    width: 100%;
+
+    > span {
+      font-family: "Space Mono", monospace !important;
+    }
+  }
+
+  .contents {
+    justify-content: space-between;
+    padding: 0 1rem;
+  }
+
+  .message {
+    font-family: "Space Mono", monospace !important;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid grey;
+    padding: 4px;
+
+    &__date {
+      padding: 0 0.2rem;
+      flex-shrink: 0;
+      color: grey;
+      letter-spacing: -0.6px;
+      > span {
+        font-family: "Space Mono", monospace !important;
+      }
+    }
+
+    &__elapsed {
+      color: grey;
+      padding: 0 0.4rem;
+      width: 100px;
+      letter-spacing: -0.6px;
+    }
+
+    &__top-section {
+      flex-shrink: 0;
+      display: flex;
+
+      // justify-content: space-between;
+      width: 100%;
+    }
+
+    &__type {
+      background: black;
+      color: white;
+      border-radius: 0.2rem;
+      width: 110px;
+      padding: 1px 2px;
+    }
+
+    &__result {
+      text-transform: uppercase;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0 0.2rem;
+      > p,
+      span {
+        font-family: "Space Mono", monospace !important;
+      }
+
+      &--error {
+        color: red;
+        border-bottom: 1px solid red;
+      }
+    }
+
+    &__error {
+      padding: 0.25rem;
+
+      > p,
+      span {
+        font-family: "Space Mono", monospace !important;
+        color: red;
+      }
+    }
+
+    &--STOPPED {
+      border-bottom: 4px solid grey;
+      text-transform: uppercase;
+
+      .message__type {
+        background: white;
+        color: black;
+        border-radius: 0.2rem;
+        width: 110px;
+        padding: 1px 2px;
+      }
+    }
+
+    .final-result {
+      color: green;
+      border-bottom: 1px solid grey;
+    }
+
+    .message-top,
+    .message-bottom {
+      display: flex;
+    }
+
+    .message-top {
+      justify-content: space-between;
+    }
+
+    .current-event {
+      float: right;
+      text-transform: uppercase;
+    }
+  }
+}

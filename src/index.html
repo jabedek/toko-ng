@@ -8,12 +8,37 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
   </head>
   <body>
+    <div id="browserInfo">
+      <div>
+        <h2>Chrome / Chromium-based</h2>
+        <p>Everything should work fine</p>
+      </div>
+      <div>
+        <h2>Firefox</h2>
+        To be able to use Web Speech API in Firefox, go to
+        <b>about:config</b>
+        and switch these flags to true:
+        <ul>
+          <li>* media.webspeech.recognition.enable</li>
+          <li>* media.webspeech.recognition.force_enable</li>
+          <li>* media.webspeech.synth.enabled</li>
+        </ul>
+        <b>Are you aware that you have to enable the access yourself?</b>
+      </div>
+
+      <br />
+      <div>
+        <h2>Other browsers</h2>
+        <p>
+          If you are not using Chrome, Firefox or Chromium based browser - read about Web Speech API access for you browser on the internet.
+        </p>
+      </div>
+
+      <b>Are you aware that you have to enable the access yourself?</b>
+    </div>
     <app-root></app-root>
   </body>
 </html>

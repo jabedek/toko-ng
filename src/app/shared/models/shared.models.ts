@@ -1,7 +1,7 @@
 export type NextEventFn = (event: Event) => void;
 
 export interface ProcessMessage {
-  date: string | Date;
+  date: string;
   eventType: string;
   error?: string;
 }

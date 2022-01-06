@@ -11,7 +11,13 @@ import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { ApplicationRef, Injectable, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 // import { AppState } from '../../app-state/app-state.model';
-import { RecommendedVoices, SynthesisSelected, SynthesisEvent, SynthesisProcessMessage } from './../../shared/models/synthesis.model';
+import {
+  RecommendedVoices,
+  SynthesisSelected,
+  SynthesisEvent,
+  SynthesisProcessMessage,
+  SpeechSynthesisUtteranceEventType,
+} from './../../shared/models/synthesis.model';
 import { LoaderService } from './loader.service';
 import { EventsHandlerService } from './events-handler.service';
 import { DEFAULT_TEXT } from './synthesis.constants';
@@ -127,6 +133,12 @@ export class SynthService implements OnDestroy {
       const { utterance, processMessage } = this.eventsHandler.resolveEvent(event, this.utterance);
       this.utterance = utterance;
       this.processMessages.push(processMessage);
+
+      if (processMessage.eventType === SpeechSynthesisUtteranceEventType.end) {
+        const stopped = this.eventsHandler.createProcessMessage('STOPPED');
+        stopped.elapsedTime = processMessage.elapsedTime;
+        this.processMessages.push(stopped);
+      }
 
       const state = {
         paused: !!this.synth?.paused,

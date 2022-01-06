@@ -24,11 +24,11 @@ export class EventsHandlerService {
     return newUtterance;
   }
 
-  createProcessMessage(event: SynthesisEvent): SynthesisProcessMessage {
+  createProcessMessage(event: SynthesisEvent | 'STOPPED'): SynthesisProcessMessage {
     const elapsedTimeMS = (event as any).elapsedTime as number;
     const processMessage: SynthesisProcessMessage = {
       date: moment().format('yyyy-MM-DD HH:mm:ss'),
-      eventType: event.type,
+      eventType: event === 'STOPPED' ? event : event.type,
       elapsedTime: roundToTwo(elapsedTimeMS / 1000),
     };
 

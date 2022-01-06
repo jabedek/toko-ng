@@ -27,12 +27,13 @@ export interface RecognitionResultSnapshot {
   transcript: string;
   confidence: string;
   isFinal: boolean;
+  date: string | number;
 }
 
 export interface RecognitionProcessMessage extends ProcessMessage {
+  id: string;
   elapsedTime: string | number;
-  // topResult?: RecognitionResultSnapshot;
-  topResultsSoFar?: RecognitionResultSnapshot[];
+  result?: RecognitionResultSnapshot;
 }
 
 export interface SpeechRecognition extends EventTarget {
@@ -55,7 +56,7 @@ export interface SpeechRecognition extends EventTarget {
   onaudioend: (ev: Event) => any;
   onresult: (ev: SpeechRecognitionEvent) => any;
   onnomatch: (ev: SpeechRecognitionEvent) => any;
-  onerror: (ev: SpeechRecognitionError) => any;
+  onerror: (ev: SpeechRecognitionErrorEvent) => any;
   onstart: (ev: Event) => any;
   onend: (ev: Event) => any;
 }
@@ -89,10 +90,6 @@ export interface SpeechRecognitionStatic {
   prototype: SpeechRecognition;
   new (): SpeechRecognition;
 }
-export interface SpeechRecognitionError extends Event {
-  error: string;
-  message: string;
-}
 
 export interface SpeechRecognitionErrorEvent extends Event {
   error: Readonly<string>;
@@ -120,6 +117,7 @@ export enum SpeechRecognitionEventType {
   error = 'error',
   nomatch = 'nomatch',
   result = 'result',
+  STOPPED = 'STOPPED',
 }
 
 // export type SpeechRecognitionEventType =

@@ -1,4 +1,4 @@
-import { RecognitionLanguage } from './../../../shared/models/recognition.model';
+import { RecognitionLanguage } from '../../../shared/models/recognition.model';
 export const DEFAULT_RECOGNITION_LANGUAGES: RecognitionLanguage[] = [
   {
     langCode: 'pl-PL',

@@ -12,7 +12,7 @@ import {
 import { NextEventFn } from 'src/app/shared/models/shared.models';
 import { roundToTwo } from '../../shared/utils/utils';
 import { RECOG_EVENTS } from './recognition.constants';
-
+import { v4 as uuidv4 } from 'uuid';
 @Injectable({
   providedIn: 'root',
 })
@@ -25,31 +25,35 @@ export class EventsHandlerService {
   private startedAt = 0;
   private eventSubject: Subject<RecognitionEvent> = new Subject();
   events$: Observable<RecognitionEvent> = this.eventSubject.asObservable();
+  private currentID = '';
 
   constructor() {}
 
   getRecogWithHandlers(target: SpeechRecognition): SpeechRecognition {
+    this.currentID = uuidv4();
     const newRecog = this.attachRecogListeners(target, this.detachListeners, (event: RecognitionEvent) => this.eventSubject.next(event));
     this.startedAt = Date.now();
     return newRecog;
   }
 
-  createProcessMessage(eventType: string): RecognitionProcessMessage {
+  createProcessMessage(event: RecognitionEvent | 'STOPPED'): { processMessage: RecognitionProcessMessage } {
     const elapsedTimeMS = Math.abs(Date.now() - this.startedAt);
-    console.log(elapsedTimeMS);
+    const elapsedTime = roundToTwo(elapsedTimeMS / 1000);
+    const date = moment().format('yyyy-MM-DD HH:mm:ss');
 
     const processMessage: RecognitionProcessMessage = {
-      date: moment().format('yyyy-MM-DD HH:mm:ss'),
-      eventType: eventType,
-      elapsedTime: roundToTwo(elapsedTimeMS / 1000),
-      topResultsSoFar: [],
+      id: this.currentID,
+      date,
+      eventType: event === 'STOPPED' ? event : event.type,
+      elapsedTime,
     };
 
-    return processMessage;
+    return { processMessage };
   }
 
   resolveEvent(event: RecognitionEvent, recog: SpeechRecognition) {
-    const processMessage: RecognitionProcessMessage = this.createProcessMessage(event.type);
+    const { processMessage } = this.createProcessMessage(event);
+    let topResultsSoFar: RecognitionResultSnapshot[] = [];
 
     switch (event.type) {
       case SpeechRecognitionEventType.start:
@@ -63,10 +67,11 @@ export class EventsHandlerService {
       case SpeechRecognitionEventType.nomatch:
         break;
       case SpeechRecognitionEventType.result:
-        processMessage.topResultsSoFar = this.getTopResultFromResults((event as SpeechRecognitionEvent).results).filter((r) => r.isFinal);
+        topResultsSoFar = this.getTopResultFromResults((event as SpeechRecognitionEvent).results, processMessage.date);
         break;
       case SpeechRecognitionEventType.error:
         processMessage.error = (event as SpeechRecognitionErrorEvent).error;
+
         break;
       case SpeechRecognitionEventType.speechend:
         break;
@@ -76,11 +81,10 @@ export class EventsHandlerService {
         break;
       case SpeechRecognitionEventType.end:
         recog?.start();
-
         break;
     }
 
-    return { processMessage };
+    return { processMessage, topResultsSoFar };
   }
 
   private attachRecogListeners(
@@ -106,22 +110,23 @@ export class EventsHandlerService {
     return newRecognition;
   }
 
-  private getTopResultFromResults(results: SpeechRecognitionResultList): RecognitionResultSnapshot[] {
+  private getTopResultFromResults(results: SpeechRecognitionResultList, date: string): RecognitionResultSnapshot[] {
     return Array.from(results)
       .map((result: SpeechRecognitionResult) => {
         return { alternative: result[0], isFinal: result.isFinal };
       })
       .map((topResult: { alternative: SpeechRecognitionAlternative; isFinal: boolean }) => {
         // TODO: tu powinno sie odszukac probe cenzury posrod alternatyw - np dla 'chuj' jest 'c***' wiec mozna zamienic
-        let transcript = topResult.alternative.transcript;
-        if (transcript.includes('c***')) {
+        let { transcript, confidence } = topResult.alternative;
+        if (transcript?.includes('c***')) {
           transcript = 'chuj';
         }
 
         return {
           transcript,
-          confidence: topResult.alternative.confidence.toString().substr(0, 5),
+          confidence: confidence?.toString().substr(0, 5),
           isFinal: topResult.isFinal,
+          date,
         };
       });
   }

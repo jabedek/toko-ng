@@ -1,5 +1,5 @@
 <h2>Recognition</h2>
-<div class="speech-to-text-container">
+<div class="container">
   <div *ngIf="params" class="form">
     <div class="field">
       <label class="field__label">Language</label>
@@ -10,23 +10,25 @@
     </div>
 
     <div class="field">
-      <div class="checkbox-input">
-        <div class="checkbox-wrapper">
-          <input
-            type="checkbox"
-            [(ngModel)]="params.interimResults"
-            (change)="updateSelected('interimResults')"
-            [value]="true"
-            class="field__control field__control--checkbox" />
+      <section class="field__section">
+        <label class="field__label">Terms to focus on</label>
+        <input type="text" [(ngModel)]="termsToFind" (keydown)="updateSelected('terms')" class="field__control" />
+      </section>
+
+      <section class="field__section">
+        <div class="checkbox-input">
+          <div class="checkbox-wrapper">
+            <input
+              id="interimResults"
+              type="checkbox"
+              [(ngModel)]="params.interimResults"
+              (change)="updateSelected('interimResults')"
+              [value]="true"
+              class="field__control field__control--checkbox" />
+          </div>
+          <label class="field__label" for="interimResults" [style.userSelect]="'none'">Capture interim (not yet final) results</label>
         </div>
-        <label class="field__label">Capture interim (not yet final) results</label>
-      </div>
-    </div>
-
-    <div class="field">
-      <label class="field__label">Terms to focus on</label>
-
-      <input [(ngModel)]="termsToFind" (keydown)="updateSelected('terms')" class="field__control" />
+      </section>
     </div>
 
     <div class="form-actions">
@@ -38,53 +40,72 @@
 
   <div class="side-panel">
     <section class="section section--process-view">
-      <label class="label">
-        Process Events View
-        <span class="current-event">{{ speechState ? speechState : "" }}</span>
-      </label>
+      <div class="label">
+        <section>Process Events View</section>
+        <section>
+          <span class="current-event">{{ speechState ? speechState : "" }}</span>
+          <span class="speech-state speech-state--{{ speechState }}"></span>
+        </section>
+      </div>
       <ul class="process-messages" #messagesEl>
         <li *ngFor="let message of service.processMessages" class="message message--{{ message.eventType }}">
           <div class="message-top">
             <section class="message__top-section">
-              <span class="message__type">
-                {{ message.eventType }}
-              </span>
-              <span class="message__elapsed">
-                {{ "+" + message.elapsedTime + "s. " }}
-              </span>
-              <span class="message__date">
-                {{ message.date }}
-              </span>
+              <div class="timings">
+                <span class="message__date">
+                  {{ message.date }}
+                </span>
+                <span class="message__elapsed">
+                  {{ "+" + message.elapsedTime + "s. " }}
+                </span>
+              </div>
+              <div class="contents">
+                <span class="message__type">
+                  {{ message.eventType }}
+                </span>
+                <span *ngIf="message.error" class="message__result message__result--error">
+                  {{ message.error }}
+                </span>
+              </div>
             </section>
           </div>
           <div class="message-bottom">
-            <!-- <section class="message__result" *ngIf="message.topResult" [ngClass]="{ 'final-result': message.topResult.isFinal }">
-              <div class="message">
-                {{ message.topResult?.isFinal ? "(FINAL)" : "(INTERIM)" }}
-
-                <p class="message__transcript">[wykryto]: "{{ message.topResult.transcript }}"</p>
-                <p class="message__confidence">[pewność]: {{ message.topResult.confidence }}</p>
-              </div>
-            </section> -->
-
+            <ng-container *ngIf="service.resultsObj[message.date]">
+              <ng-container *ngIf="params?.interimResults || (!params?.interimResults && !!service.resultsObj[message.date].isFinal)">
+                <span class="message__result" [ngClass]="{ 'final-result': service.resultsObj[message.date].isFinal }">
+                  {{ service.resultsObj[message.date].transcript }}
+                </span>
+              </ng-container>
+            </ng-container>
             <section class="message__error" *ngIf="message.error">
               <ng-container [ngSwitch]="message.error">
-                <span class="message__error-desc" *ngSwitchCase="'no-speech'">
-                  [no-speech] Nie wykryto mowy ze strony użytkownika (nikt nic nie mówi?).
+                <span class="message__error-desc" *ngSwitchCase="'no-speech'">No speech was detected.</span>
+                <span class="message__error-desc" *ngSwitchCase="'aborted'">
+                  Speech input was aborted in some manner, perhaps by some user-agent-specific behavior like a button the user can press to
+                  cancel speech input.
                 </span>
-                <span class="message__error-desc" *ngSwitchCase="'audio-capture'">[audio-capture] Problem z wyłapaniem audio.</span>
-                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">[not-allowed] Brak zezwolenia.</span>
-                <span class="message__error-desc" *ngSwitchDefault>[{{ message.error }}] Błąd</span>
+                <span class="message__error-desc" *ngSwitchCase="'audio-capture'">Audio capture failed. Problem z wyłapaniem audio.</span>
+                <span class="message__error-desc" *ngSwitchCase="'network'">
+                  Network communication required for completing the recognition failed.
+                </span>
+                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">
+                  The user agent disallowed any speech input from occurring for reasons of security, privacy or user preference.
+                </span>
+                <span class="message__error-desc" *ngSwitchCase="'service-not-allowed'">
+                  The user agent disallowed the requested speech recognition service, either because the user agent doesn't support it or
+                  because of reasons of security, privacy or user preference. In this case it would allow another more suitable speech
+                  recognition service to be used instead.
+                </span>
+                <span class="message__error-desc" *ngSwitchCase="'bad-grammar'">
+                  There was an error in the speech recognition grammar or semantic tags, or the chosen grammar format or semantic tag format
+                  was unsupported.
+                </span>
+                <span class="message__error-desc" *ngSwitchCase="'language-not-supported'">The language was not supported.</span>
               </ng-container>
             </section>
           </div>
         </li>
       </ul>
     </section>
-
-    <section class="section">
-      <label class="label">Found words: {{ service.textDisplayed }}</label>
-    </section>
   </div>
-  <div class="state state--{{ speechState }}" [ngClass]="{speechState}"></div>
 </div>

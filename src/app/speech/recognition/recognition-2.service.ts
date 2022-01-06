@@ -4,19 +4,19 @@ import {
   RecognitionLanguage,
   RecognitionSelected,
   SpeechRecognitionEventType,
+  RecognitionResultSnapshot,
 } from './../../shared/models/recognition.model';
 import { takeUntil } from 'rxjs/operators';
 import { Injectable, ApplicationRef } from '@angular/core';
-import { ReplaySubject, Subject } from 'rxjs';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
 import { LoaderService } from './loader.service';
 import { EventsHandlerService } from './events-handler.service';
-import { DEFAULT_RECOGNITION_LANGUAGES } from './assets/languages';
+import { DEFAULT_RECOGNITION_LANGUAGES } from './constants/languages.constant';
 
 declare var webkitSpeechRecognition: any;
 declare var webkitSpeechGrammarList: any;
 const SpeechRecognition = webkitSpeechRecognition;
 const SpeechGrammarList = webkitSpeechGrammarList;
-
 type SpeechRecognition = typeof SpeechRecognition;
 
 /**
@@ -28,20 +28,19 @@ type SpeechRecognition = typeof SpeechRecognition;
   providedIn: 'root',
 })
 export class RecogService2 {
-  eventSubject: Subject<RecognitionEvent> = new Subject();
-  speechStateSubect: Subject<SpeechRecognitionEventType> = new Subject();
-  isStoppedSpeechRecog = false;
-  isListening = false;
-  foundWords = '';
-  textDisplayed = '';
-  tempWords = '';
-  // startedAt = 0;
-  topResults: any[] = [];
   processMessages: RecognitionProcessMessage[] = [];
+  processMessagesObj: { [key: string]: RecognitionProcessMessage } = {};
+  results: RecognitionResultSnapshot[] = [];
+  resultsObj: { [key: string]: RecognitionResultSnapshot } = {};
   langs: RecognitionLanguage[] = DEFAULT_RECOGNITION_LANGUAGES;
-  recog: SpeechRecognition | undefined;
-  grammar: SpeechGrammarList | undefined;
-  recognitionLoadedSub$: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
+
+  private speechStateSub: Subject<SpeechRecognitionEventType> = new Subject();
+  speechState$: Observable<SpeechRecognitionEventType> = this.speechStateSub.asObservable();
+  private recognitionLoadedSub$: ReplaySubject<boolean> = new ReplaySubject<boolean>(1);
+  recognitionLoaded$: Observable<boolean> = this.recognitionLoadedSub$.asObservable();
+
+  private isListening = false;
+  private recog: SpeechRecognition | undefined;
   private destroy$: Subject<void> = new Subject();
 
   constructor(public ref: ApplicationRef, private loader: LoaderService, private eventsHandler: EventsHandlerService) {
@@ -68,9 +67,8 @@ export class RecogService2 {
 
   private init() {
     setTimeout(() => {
-      const { recog, grammar } = this.loader.getSynthAndGrammar();
+      const { recog } = this.loader.getSynthAndGrammar();
       this.recog = recog;
-      this.grammar = grammar;
       this.subscribeEventsStream();
 
       this.recognitionLoadedSub$.next(true);
@@ -79,15 +77,16 @@ export class RecogService2 {
 
   private subscribeEventsStream(): void {
     this.eventsHandler.events$.pipe(takeUntil(this.destroy$)).subscribe((event: RecognitionEvent) => {
-      const { processMessage } = this.eventsHandler.resolveEvent(event, this.recog);
+      const { processMessage, topResultsSoFar } = this.eventsHandler.resolveEvent(event, this.recog);
 
       this.processMessages.push(processMessage);
+      this.processMessagesObj[processMessage.date] = { ...processMessage };
+      this.results = topResultsSoFar;
+      topResultsSoFar.forEach((r) => {
+        this.resultsObj[r.date] = { ...r };
+      });
 
-      if (processMessage.topResultsSoFar) {
-        console.log(processMessage.topResultsSoFar);
-      }
-
-      this.speechStateSubect.next(event.type as SpeechRecognitionEventType);
+      this.speechStateSub.next(event.type as SpeechRecognitionEventType);
       this.ref.tick(); // update component from here (instead of standard CDR)
     });
   }
@@ -95,21 +94,18 @@ export class RecogService2 {
   listen(params: RecognitionSelected) {
     this.stop();
     this.prepareRecognition(params);
-    // this.startedAt = Date.now();
     this.processMessages = [];
     if (!this.isListening) {
       this.recog?.start();
       this.isListening = true;
-      this.isStoppedSpeechRecog = false;
     }
   }
 
   stop() {
     this.isListening = false;
-    this.isStoppedSpeechRecog = true;
     this.recog = this.eventsHandler.detachListeners(this.recog);
     this.recog?.stop();
-    this.processMessages.push(this.eventsHandler.createProcessMessage('STOPPED'));
+    this.processMessages.push(this.eventsHandler.createProcessMessage(SpeechRecognitionEventType.STOPPED).processMessage);
   }
 
   private prepareRecognition(params: RecognitionSelected) {
@@ -128,13 +124,13 @@ export class RecogService2 {
   /**
    * Set up terms and grammar
    *
-   * [line]: #JSGF V1.0; - states the format and version used. This always needs to be included first.
+   * [ line ]: #JSGF V1.0; - states the format and version used. This always needs to be included first.
    *
-   * [line]: grammar terms; - indicates a type of term that we want to recognise.
+   * [ line ]: grammar terms; - indicates a type of term that we want to recognise.
    *
-   * [line]: public <term> - public declares that it is a public rule, the string in angle brackets defines the recognised name for this term (term).
+   * [ line ]: public <term> - public declares that it is a public rule, the string in angle brackets defines the recognised name for this term (term).
    *
-   * [line]: ' + terms.join(' | ') + ' - alternative values that will be recognised and accepted as appropriate values for the term.
+   * [ line ]: ' + terms.join(' | ') + ' - alternative values that will be recognised and accepted as appropriate values for the term.
 
    * @param terms Terms wanted to be recognised
    * @returns A DOMString representing the grammar to be added.

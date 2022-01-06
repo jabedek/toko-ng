@@ -12,7 +12,6 @@ const SpeechRecognition = window.SpeechRecognition;
 })
 export class LoaderService {
   private recog: SpeechRecognition = new SpeechRecognition();
-  private grammar: SpeechGrammarList = new SpeechGrammarList();
 
   constructor() {
     this.getRecog();
@@ -20,13 +19,12 @@ export class LoaderService {
 
   /**
    *
-   * @returns Speech recognition and empty grammar list.
+   * @returns Speech recognition and empty grammar  list.
    */
   getSynthAndGrammar(): {
     recog: SpeechRecognition;
-    grammar: SpeechGrammarList;
   } {
-    return { recog: this.recog, grammar: this.grammar };
+    return { recog: this.recog };
   }
 
   private getRecog(): void {

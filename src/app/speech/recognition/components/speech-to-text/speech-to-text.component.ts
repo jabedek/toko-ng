@@ -30,7 +30,7 @@ export class SpeechToTextComponent implements OnInit, OnDestroy, AfterViewChecke
   private destroy$: Subject<void> = new Subject();
 
   constructor(public service: RecogService2) {
-    this.service.recognitionLoadedSub$.pipe(takeWhile((v) => v)).subscribe((loaded) => {
+    this.service.recognitionLoaded$.pipe(takeWhile((v) => v)).subscribe((loaded) => {
       if (loaded) {
         this.params = {
           ...this.service.getDefaultParams(),
@@ -40,7 +40,7 @@ export class SpeechToTextComponent implements OnInit, OnDestroy, AfterViewChecke
   }
 
   ngOnInit(): void {
-    this.service.speechStateSubect.subscribe((s) => {
+    this.service.speechState$.subscribe((s) => {
       this.speechState = s;
       this.scrollToBottom();
     });
@@ -63,9 +63,11 @@ export class SpeechToTextComponent implements OnInit, OnDestroy, AfterViewChecke
   }
 
   stop() {
-    this.userPaused = true;
-    this.speechState = undefined;
-    this.service.stop();
+    if (!this.userPaused) {
+      this.userPaused = true;
+      this.speechState = undefined;
+      this.service.stop();
+    }
   }
 
   updateSelected(key: 'lang' | 'interimResults' | 'terms' | 'grammar' | 'continuous') {}

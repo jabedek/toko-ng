@@ -1,16 +1,15 @@
 <h2>Synthesis</h2>
-<div class="text-to-speech-container">
+<div class="container">
   <div class="form" *ngIf="params">
     <div class="field" *ngIf="params.voice && service.voices?.length">
-      <label for="voice-control" class="field__label"> Voice </label>
+      <label for="voice-control" class="field__label">Voice</label>
       <div class="field__content">
         <select
           id="voice-control"
           name="voice"
           [(ngModel)]="params.voice"
           (change)="updateSelected('voice')"
-          class="field__control field__control--select"
-        >
+          class="field__control field__control--select">
           <option value="">- Select a voice -</option>
           <option *ngFor="let voice of service.voices" [ngValue]="voice">
             {{ voice.name }}
@@ -21,7 +20,7 @@
 
     <div class="field field--double" *ngIf="params.pitch">
       <section class="field__section">
-        <label class="field__label"> Pitch </label>
+        <label class="field__label">Pitch</label>
         <input
           type="range"
           min="0.25"
@@ -29,8 +28,7 @@
           step="0.25"
           class="field__control"
           (change)="updateSelected('pitch')"
-          [(ngModel)]="params.pitch"
-        />
+          [(ngModel)]="params.pitch" />
 
         <label class="field__label field__label--value">
           {{ params!.pitch }}
@@ -38,7 +36,7 @@
       </section>
 
       <section class="field__section" *ngIf="params.rate">
-        <label class="field__label"> Rate </label>
+        <label class="field__label">Rate</label>
         <input
           type="range"
           [attr.min]="rates[0]"
@@ -46,8 +44,7 @@
           class="field__control"
           step="0.25"
           (change)="updateSelected('rate')"
-          [(ngModel)]="params.rate"
-        />
+          [(ngModel)]="params.rate" />
         <label class="field__label field__label--value">
           {{ params!.rate }}
         </label>
@@ -56,7 +53,7 @@
 
     <div class="field">
       <section class="field__section">
-        <label for="text-control" class="field__label"> Text </label>
+        <label for="text-control" class="field__label">Text</label>
         <div class="field__content">
           <textarea
             #textarea
@@ -64,109 +61,69 @@
             name="text"
             [(ngModel)]="text"
             (keyup)="handleKey($event)"
-            class="field__control field__control--textarea"
-          ></textarea>
+            class="field__control field__control--textarea"></textarea>
         </div>
       </section>
 
       <section class="field__section">
         <div class="checkbox-input">
           <div class="checkbox-wrapper">
-            <input
-              type="checkbox"
-              [(ngModel)]="speakOnChange"
-              class="field__control field__control--checkbox"
-            />
+            <input id="speakOnChange" type="checkbox" [(ngModel)]="speakOnChange" class="field__control field__control--checkbox" />
           </div>
-          <label class="field__label">
-            Start new speech on any settings change
-          </label>
+          <label class="field__label" for="speakOnChange" [style.userSelect]="'none'">Start new speech on any settings change</label>
         </div>
       </section>
     </div>
 
     <div class="form-actions">
-      <button type="button" (click)="speak()" class="action__button">
-        Speak text
-      </button>
+      <button type="button" (click)="speak()" class="action__button">Speak text</button>
 
-      <button
-        type="button"
-        (click)="stop()"
-        class="action__button action__button--secondary"
-      >
-        Stop
-      </button>
-      <button
-        type="button"
-        (click)="pause()"
-        class="action__button action__button--secondary"
-      >
-        Pause
-      </button>
-      <button
-        type="button"
-        (click)="resume()"
-        class="action__button action__button--secondary"
-      >
-        Resume
-      </button>
+      <button type="button" (click)="stop()" class="action__button action__button--secondary">Stop</button>
+      <button type="button" (click)="pause()" class="action__button action__button--secondary">Pause</button>
+      <button type="button" (click)="resume()" class="action__button action__button--secondary">Resume</button>
     </div>
   </div>
 
   <div class="side-panel">
     <section class="section section--process-view">
-      <label class="label">
-        Process Events View
-        <span class="current-event">
-          {{ speechState ? speechState : "" }}</span
-        ></label
-      >
+      <div class="label">
+        <section>Process Events View</section>
+        <section>
+          <span class="current-event">{{ speechState ? speechState : "" }}</span>
+          <span class="speech-state speech-state--{{ speechState }}"></span>
+        </section>
+      </div>
       <ul class="process-messages" #messagesEl>
-        <li *ngFor="let message of service.processMessages" class="message">
+        <li *ngFor="let message of service.processMessages" class="message message--{{ message.eventType }}">
           <div class="message-top">
             <section class="message__top-section">
-              <span class="message__type">
-                {{ message.eventType }}
-              </span>
-              <span class="message__elapsed">
-                {{ "+" + message.elapsedTime + "s. " }}
-              </span>
-
-              <span class="message__date">
-                {{ message.date }}
-              </span>
+              <div class="timings">
+                <span class="message__date">
+                  {{ message.date }}
+                </span>
+                <span class="message__elapsed">
+                  {{ "+" + message.elapsedTime + "s. " }}
+                </span>
+              </div>
+              <div class="contents">
+                <span class="message__type">
+                  {{ message.eventType }}
+                </span>
+                <span class="message__result" *ngIf="message.name">
+                  {{ message.name }}
+                </span>
+              </div>
             </section>
           </div>
           <div class="message-bottom">
-            <section
-              class="message__result"
-              *ngIf="message.name"
-              [ngClass]="{ 'final-result': message.name }"
-            >
-              <p class="message">
-                {{ message.name }}
-              </p>
-            </section>
-
             <section class="message__error" *ngIf="message.error">
               <ng-container [ngSwitch]="message.error">
                 <span class="message__error-desc" *ngSwitchCase="'no-speech'">
-                  [no-speech] Nie wykryto mowy ze strony użytkownika (nikt nic
-                  nie mówi?).
+                  [no-speech] Nie wykryto mowy ze strony użytkownika (nikt nic nie mówi?).
                 </span>
-                <span
-                  class="message__error-desc"
-                  *ngSwitchCase="'audio-capture'"
-                >
-                  [audio-capture] Problem z wyłapaniem audio.
-                </span>
-                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">
-                  [not-allowed] Brak zezwolenia.
-                </span>
-                <span class="message__error-desc" *ngSwitchDefault>
-                  [{{ message.error }}] Błąd
-                </span>
+                <span class="message__error-desc" *ngSwitchCase="'audio-capture'">[audio-capture] Problem z wyłapaniem audio.</span>
+                <span class="message__error-desc" *ngSwitchCase="'not-allowed'">[not-allowed] Brak zezwolenia.</span>
+                <span class="message__error-desc" *ngSwitchDefault>[{{ message.error }}] Błąd</span>
               </ng-container>
             </section>
           </div>
@@ -174,8 +131,4 @@
       </ul>
     </section>
   </div>
-  <div
-    class="speech-state speech-state--{{ speechState }}"
-    [ngClass]="{speechState}"
-  ></div>
 </div>
